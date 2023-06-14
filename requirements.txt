@@ -1,0 +1,8 @@
+pandas
+numpy
+nltk
+datasets
+datasets[audio]
+transformers
+scikit-learn
+torch
