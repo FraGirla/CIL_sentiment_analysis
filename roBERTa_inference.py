@@ -53,7 +53,7 @@ def tokenize_function(examples):
     return tokenizer(examples["clean_tweet"], max_length=MAX_LEN, padding='max_length',)
 
 
-dataset = dataset.map(lambda x: {"label": [float(x["label"])]})
+dataset['train'] = dataset.map(lambda x: {"label": [float(x["label"])]})
 tokenized_datasets = dataset.map(tokenize_function, batched=True)
 # %%
 tokenized_datasets["train"] = tokenized_datasets["train"].shuffle(seed=42)
