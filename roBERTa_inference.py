@@ -52,14 +52,9 @@ tokenizer = AutoTokenizer.from_pretrained(hugging_face_model)
 def tokenize_function(examples):
     return tokenizer(examples["clean_tweet"], max_length=MAX_LEN, padding='max_length',)
 
-def split_label(label):
-    return [np.array(str(l).split(' '),dtype=float) for l in label]
 
-dataset['train'] = dataset['train'].map(lambda x: {"label": split_label(x["label"])}, batched=True)
+dataset = dataset.map(lambda x: {"label": [float(x["label"])]})
 tokenized_datasets = dataset.map(tokenize_function, batched=True)
-tokenized_datasets=tokenized_datasets.filter(lambda x: len(x["input_ids"])<=MAX_LEN)
-tokenized_datasets
-
 # %%
 tokenized_datasets["train"] = tokenized_datasets["train"].shuffle(seed=42)
 #tokenized_datasets["validation"] = tokenized_datasets["validation"].shuffle(seed=42)
@@ -68,7 +63,8 @@ tokenized_datasets["test"] = tokenized_datasets["test"]
 
 from transformers import DataCollatorWithPadding
 
-tokenized_datasets.set_format('torch', columns=["input_ids", "attention_mask", "label"] )
+tokenized_datasets["train"].set_format('torch', columns=["input_ids", "attention_mask", "label"] )
+tokenized_datasets["test"].set_format('torch', columns=["input_ids", "attention_mask"] )
 
 data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 # %%
