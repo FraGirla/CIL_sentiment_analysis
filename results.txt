@@ -1,0 +1,15 @@
+
+roberta tweet acc
+0 layers: 0.7809
+1 layers: 0.8261
+2 layers no embedding: 0.8319
+6 layers no embedding ~0.84
+12 layers no embedding ~0.852
+6 layers no embedding light preprocessing 0.8929
+12 layers no embedding light preprocessing 0.8949 BEST SO FAR IN 1 FOLD
+mean acc:  0.8923125862793351
+std acc:  0.0023438754395944676
+12 layers no embedding no preprocessing ~0.83
+12 layers with embedding light preprocessing 0.5 (???)
+12 layers with embedding no preprocessing 0.8266
+

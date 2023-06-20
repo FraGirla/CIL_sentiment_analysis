@@ -248,21 +248,6 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
 
 print("mean acc: ", sum(accuracies) / len(accuracies))
 print("std acc: ", np.std(accuracies))
-# %%
-#roberta tweet acc
-#0 layers: 0.7809
-#1 layers: 0.8261
-#2 layers no embedding: 0.8319
-#6 layers no embedding ~0.84
-#12 layers no embedding ~0.852
-#6 layers no embedding light preprocessing 0.8929
-#12 layers no embedding light preprocessing 0.8949
-
-#mean acc:  0.8923125862793351
-#std acc:  0.0023438754395944676
-
-
-#12 layers no embedding no preprocessing ~0.83
 
 
 
