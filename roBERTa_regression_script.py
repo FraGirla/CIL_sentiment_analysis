@@ -64,13 +64,8 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
     def tokenize_function(examples):
         return tokenizer(examples["clean_tweet"], max_length=MAX_LEN, padding='max_length',)
 
-    def split_label(label):
-        return [np.array(str(l).split(' '),dtype=float) for l in label]
-
-    dataset = dataset.map(lambda x: {"label": split_label(x["label"])}, batched=True)
+    dataset = dataset.map(lambda x: {"label": [float(x["label"])]})
     tokenized_datasets = dataset.map(tokenize_function, batched=True)
-    tokenized_datasets=tokenized_datasets.filter(lambda x: len(x["input_ids"])<=MAX_LEN)
-    tokenized_datasets
 
     # %%
     tokenized_datasets["train"] = tokenized_datasets["train"].shuffle(seed=42)
