@@ -186,6 +186,9 @@ for epoch in range(num_epoch):
         progress_bar_train.update(1)
 
 # %%
+torch.save(model.state_dict(), "roBERTa_12_layers_no_emb_light_pre_inference.pt")
+
+# %%
 threshold = 0.5
 correct_predictions = 0
 total_predictions = 0
@@ -213,8 +216,6 @@ predictions_pd.index.name = "Id"
 predictions_pd.to_csv("Prediction.csv")
 
 
-# %%
-torch.save(model.state_dict(), "roBERTa_12_layers_with_emb_light_pre_inference")
 
 
 
