@@ -26,8 +26,6 @@ import os
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-# %%
-dataset = load_dataset("csv", data_files={"train": "preprocessed/train_full.csv"})
 
 # %%
 # First make the kfold object
@@ -180,9 +178,6 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
         
     )
 
-    # %%
-    import evaluate
-    metric = evaluate.load("accuracy")
 
     # %%
     from tqdm.auto import tqdm
