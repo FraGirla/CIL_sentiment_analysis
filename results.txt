@@ -10,6 +10,8 @@ roberta tweet acc
 mean acc:  0.8923125862793351
 std acc:  0.0023438754395944676
 12 layers no embedding no preprocessing ~0.83
-12 layers with embedding light preprocessing 0.5 (???)
+12 layers with embedding light preprocessing 0.8949
+mean acc:  DOING
+std acc:  DOING
 12 layers with embedding no preprocessing 0.8266
 
