@@ -55,7 +55,7 @@ def tokenize_function(examples):
 def split_label(label):
     return [np.array(str(l).split(' '),dtype=float) for l in label]
 
-dataset = dataset.map(lambda x: {"label": split_label(x["label"])}, batched=True)
+dataset['train'] = dataset['train'].map(lambda x: {"label": split_label(x["label"])}, batched=True)
 tokenized_datasets = dataset.map(tokenize_function, batched=True)
 tokenized_datasets=tokenized_datasets.filter(lambda x: len(x["input_ids"])<=MAX_LEN)
 tokenized_datasets
