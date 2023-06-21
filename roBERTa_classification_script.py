@@ -103,6 +103,8 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
             if labels is not None:
                 loss = torch.nn.functional.binary_cross_entropy(logits, labels)
                 return TokenClassifierOutput(loss=loss, logits=logits, hidden_states=last_hidden_state)
+            else:
+                return TokenClassifierOutput(loss=None, logits=logits, hidden_states=last_hidden_state)
 
     # %%
     from torch.utils.data import DataLoader
