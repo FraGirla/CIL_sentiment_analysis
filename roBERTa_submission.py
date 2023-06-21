@@ -23,7 +23,7 @@ from sklearn.metrics import r2_score
 import numpy as np
 import os
 
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["TOKENIZERS_PARALLELISM"] = "false" 
 
 #create dataframes for train and test
 test_df = pd.read_csv('preprocessed/test_full.csv')
