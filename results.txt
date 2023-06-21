@@ -11,7 +11,7 @@ mean acc:  0.8923125862793351
 std acc:  0.0023438754395944676
 12 layers no embedding no preprocessing ~0.83
 12 layers with embedding light preprocessing 0.8949
-mean acc:  DOING
-std acc:  DOING
+mean acc:  0.89891753196 based on 4 fold (1 fold gived 0.5)
+std acc:  0.0025041120717059
 12 layers with embedding no preprocessing 0.8266
 
