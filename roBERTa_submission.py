@@ -116,8 +116,8 @@ for batch in test_dataloader:
     final_predictions.extend(predictions.cpu().numpy().tolist())
     progress_bar_test.update(1)
 
-predictions_pd = pd.DataFrame({"Predictions": np.array(final_predictions).ravel()})
-predictions_pd['Predictions'] = predictions_pd['Predictions'].replace(0, -1)
+predictions_pd = pd.DataFrame({"Prediction": np.array(final_predictions).ravel()})
+predictions_pd['Prediction'] = predictions_pd['Prediction'].replace(0, -1)
 predictions_pd.index = np.arange(1, len(predictions_pd) + 1)
 predictions_pd.index.name = "Id"
 predictions_pd.to_csv("Prediction.csv")
