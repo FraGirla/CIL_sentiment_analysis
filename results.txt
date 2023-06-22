@@ -15,3 +15,4 @@ mean acc:  0.89891753196 based on 4 fold (1 fold gived 0.5)
 std acc:  0.0025041120717059
 12 layers with embedding no preprocessing 0.8266
 
+12 layers BERT no embedding light preprocessing mean: 0.89558 std: 0.00126
