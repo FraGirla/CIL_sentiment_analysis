@@ -28,5 +28,5 @@ mean: 0.89558 std: 0.00126
 ON KAGGLE PUBLIC: 0.8968
 
 roBERTa 12 layers with embedding partial_clean_tweet
-mean acc:  TODO
-std acc:  TODO
+mean acc:  0.902438028929836
+std acc:  0.0021023840899968478
