@@ -62,7 +62,7 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
 
 
     def tokenize_function(examples):
-        return tokenizer(examples["clean_tweet"], max_length=MAX_LEN, padding='max_length',)
+        return tokenizer(examples["partial_clean_tweet"], max_length=MAX_LEN, padding='max_length',)
 
     dataset = dataset.map(lambda x: {"label": [float(x["label"])]})
     tokenized_datasets = dataset.map(tokenize_function, batched=True)
@@ -151,7 +151,7 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
         elif "encoder.layer.11"  in name:
             param.requires_grad=True
         elif "embeddings"  in name:
-            param.requires_grad=False
+            param.requires_grad=True
         else:
             #print(name)
             pass
@@ -221,7 +221,7 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
     accuracies.append(correct_predictions / total_predictions)
 
     # %%
-    torch.save(model.state_dict(), "BERT_12_layers_no_emb_light_pre.pt")
+    torch.save(model.state_dict(), "BERT_12_layers_with_emb_punctuation.pt")
     del train_fold
     del test_fold
     del dataset
