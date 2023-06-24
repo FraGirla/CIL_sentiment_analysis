@@ -10,6 +10,12 @@ roBERTa 12 layers with embedding no preprocessing 0.8266
 
 ---------------
 
+BATCH_SIZE 32
+learning_rate 5e-5
+dropout classification 0.1
+num_epoch 1
+MAX_LEN 128/512 (BERT 128 / roBERTa 512)
+
 roBERTa 12 layers no embedding clean_tweet
 mean acc:  0.8923125862793351
 std acc:  0.0023438754395944676
