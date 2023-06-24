@@ -67,7 +67,7 @@ for learning_rate in [2e-5, 3e-5, 5e-5]:
                 from transformers import AutoTokenizer
 
                 hugging_face_model = "cardiffnlp/twitter-roberta-base-sentiment-latest"
-                tokenizer = AutoTokenizer.from_pretrained(hugging_face_model, use_fast=False)
+                tokenizer = AutoTokenizer.from_pretrained(hugging_face_model)
 
 
                 def tokenize_function(examples):
@@ -170,7 +170,7 @@ for learning_rate in [2e-5, 3e-5, 5e-5]:
                 import torch.optim as optim
                 optimizer = optim.AdamW(model.parameters(), lr=learning_rate)
 
-                num_training_steps = num_epoch * len(train_dataloader)
+                num_training_steps = len(train_dataloader)
 
                 lr_scheduler = get_scheduler(
                     'linear',
@@ -184,9 +184,8 @@ for learning_rate in [2e-5, 3e-5, 5e-5]:
                 # %%
                 from tqdm.auto import tqdm
 
-                progress_bar_train = tqdm(range(num_training_steps))
-
-                for epoch in range(1,num_epoch):
+                for epoch in range(num_epoch):
+                    progress_bar_train = tqdm(range(num_training_steps))
                     model.train()
                     for batch in train_dataloader:
                         batch = { k: v.to(device) for k, v in batch.items() }
