@@ -6,3 +6,4 @@ datasets[audio]
 transformers
 scikit-learn
 torch
+emoji
