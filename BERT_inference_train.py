@@ -71,7 +71,7 @@ class CustomModel(nn.Module):
         self.num_labels = num_labels
         
         self.model = AutoModel.from_pretrained(checkpoint, config = AutoConfig.from_pretrained(checkpoint, output_hidden_state = True ) )
-        self.dropout = nn.Dropout(0.1)
+        self.dropout = nn.Dropout(0.15)
         self.classifier = nn.Linear(768, num_labels )
         
     def forward(self, input_ids = None, attention_mask=None, labels = None ):
@@ -92,7 +92,7 @@ class CustomModel(nn.Module):
 # %%
 from torch.utils.data import DataLoader
 
-BATCH_SIZE = 32 
+BATCH_SIZE = 16 
 train_dataloader = DataLoader(
     tokenized_datasets['train'], shuffle = True, batch_size = BATCH_SIZE, collate_fn = data_collator
 )
@@ -126,7 +126,7 @@ for name, param in model.named_parameters():
     elif "encoder.layer.11"  in name:
         param.requires_grad=True
     elif "embeddings"  in name:
-        param.requires_grad=False
+        param.requires_grad=True
     else:
         #print(name)
         pass
@@ -135,7 +135,7 @@ for name, param in model.named_parameters():
 from transformers import get_scheduler
 
 import torch.optim as optim
-optimizer = optim.AdamW(model.parameters(), lr=5e-5)
+optimizer = optim.AdamW(model.parameters(), lr=2e-5)
 
 
 num_epoch = 1
@@ -170,7 +170,7 @@ for epoch in range(num_epoch):
         progress_bar_train.update(1)
 
 # %%
-torch.save(model.state_dict(), "BERT_12_layers_no_emb_light_pre_inference.pt")
+torch.save(model.state_dict(), "BERT_12_layers_emb_new_hyper_inference.pt")
 
 
 

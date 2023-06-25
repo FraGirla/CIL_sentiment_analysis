@@ -67,7 +67,7 @@ class CustomModel(nn.Module):
         self.num_labels = num_labels
         
         self.model = AutoModel.from_pretrained(checkpoint, config = AutoConfig.from_pretrained(checkpoint, output_hidden_state = True ) )
-        self.dropout = nn.Dropout(0.1)
+        self.dropout = nn.Dropout(0.15)
         self.classifier = nn.Linear(768, num_labels )
         
     def forward(self, input_ids = None, attention_mask=None, labels = None ):
@@ -88,12 +88,13 @@ class CustomModel(nn.Module):
 # %%
 from torch.utils.data import DataLoader
 
+BATCH_SIZE = 16
 test_dataloader = DataLoader(
-    tokenized_datasets['test'], batch_size = 32, collate_fn = data_collator
+    tokenized_datasets['test'], batch_size = BATCH_SIZE, collate_fn = data_collator
 )
 
 model = CustomModel(checkpoint=hugging_face_model, num_labels=1).to(device)
-model.load_state_dict(torch.load("BERT_12_layers_no_emb_light_pre_inference.pt"))
+model.load_state_dict(torch.load("BERT_12_layers_emb_new_hyper_inference.pt"))
 
 from tqdm.auto import tqdm
 threshold = 0.5

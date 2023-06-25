@@ -88,7 +88,7 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
             self.num_labels = num_labels
             
             self.model = AutoModel.from_pretrained(checkpoint, config = AutoConfig.from_pretrained(checkpoint, output_hidden_state = True ) )
-            self.dropout = nn.Dropout(0.1)
+            self.dropout = nn.Dropout(0.15)
             self.classifier = nn.Linear(768, num_labels )
             
         def forward(self, input_ids = None, attention_mask=None, labels = None ):
@@ -109,7 +109,7 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
     # %%
     from torch.utils.data import DataLoader
 
-    BATCH_SIZE = 32 
+    BATCH_SIZE = 16
     train_dataloader = DataLoader(
         tokenized_datasets['train'], shuffle = True, batch_size = BATCH_SIZE, collate_fn = data_collator
     )
@@ -119,7 +119,7 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
     #)
 
     test_dataloader = DataLoader(
-        tokenized_datasets['test'], batch_size = 32, collate_fn = data_collator
+        tokenized_datasets['test'], batch_size = BATCH_SIZE, collate_fn = data_collator
     )
 
     model = CustomModel(checkpoint=hugging_face_model, num_labels=1).to(device)
@@ -160,7 +160,7 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
     from transformers import get_scheduler
 
     import torch.optim as optim
-    optimizer = optim.AdamW(model.parameters(), lr=5e-5)
+    optimizer = optim.AdamW(model.parameters(), lr=2e-5)
 
 
     num_epoch = 1
