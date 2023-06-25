@@ -3,3 +3,4 @@ ethz-cil-text-classification-2023.zip
 preprocessed/*
 twitter-datasets/*
 saved_models/*
+Prediction.csv
