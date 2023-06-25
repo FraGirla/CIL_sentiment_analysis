@@ -105,6 +105,8 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
     dataset = DatasetDict({'train': Dataset.from_pandas(train_fold), 'test': Dataset.from_pandas(test_fold)})
     # %%
 
+    weights = np.full((dataset["train"].num_rows,),1/dataset["train"].num_rows)
+    dataset["train"] = dataset["train"].add_column("weight", weights)
     dataset = dataset.map(lambda x: {"label": [float(-1) if x["label"] == 0 else float(1) ]})
     tokenized_datasets = dataset.map(tokenize_function, batched=True)
 
