@@ -41,10 +41,34 @@ std acc:  0.0021023840899968478
 BATCH_SIZE 16
 learning_rate 2e-5
 dropout classification 0.15
-num_epoch 1
-MAX_LEN 128/512 (BERT 128 / roBERTa ...)
+MAX_LEN 128/512 (BERT 128 / roBERTa 128)
 
+num_epochs 1
 
-BERT 12 layers with embedding partial_clean_tweet
+BERT 12 layers with embedding partial_clean_tweet (BEST on BERT)
 mean acc: 0.9126479002860973
 std acc:  0.0026264475316819112
+ON KAGGLE PUBLIC: 0.90180
+
+roBERTa 12 layers with embedding partial_clean_tweet
+mean acc:  0.9056603245103336
+std acc:  0.0024353505267768684
+
+num_epochs 2
+
+roBERTa 12 layers with embedding partial_clean_tweet (BEST on roBERTa)
+mean acc:  0.907185242982614
+std acc:  0.0029945574861834656
+
+num_epochs 3
+
+roBERTa 12 layers with embedding partial_clean_tweet
+mean acc:  ???
+std acc:  ???
+
+-------------------------------------------------------------
+
+BATCH_SIZE 32
+learning_rate 2e-5
+dropout classification 0.15
+MAX_LEN 128/512 (BERT 128 / roBERTa 128)
