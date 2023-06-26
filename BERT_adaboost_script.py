@@ -80,7 +80,7 @@ class CustomModel(nn.Module):
           return TokenClassifierOutput(loss=None, logits=logits, hidden_states=last_hidden_state)
 
 MAX_LEN=128
-NUM_MODELS = 3
+NUM_MODELS = 5
 BATCH_SIZE = 16
 LEARNING_RATE = 2e-5
 NUM_EPOCHS = 1
@@ -118,100 +118,120 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
     tokenized_datasets["test"].set_format('torch', columns=["input_ids", "attention_mask", "label"] )
 
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
-
+    test_dataloader = DataLoader(tokenized_datasets['test'], batch_size = BATCH_SIZE, collate_fn = data_collator)
     # %%
 
     weak_models = [CustomModel(checkpoint=hugging_face_model, num_labels=1).to(device) for _ in range(NUM_MODELS)]
 
     alpha = []
     for i,model in enumerate(weak_models):
-        print("\nTrain model ", i)
+        print("\nFOLD {} - MODEL {}".format(fold_,i))
         train_dataloader = DataLoader(tokenized_datasets['train'], batch_size = BATCH_SIZE, collate_fn = data_collator)
-        num_training_steps = len(train_dataloader)
         optimizer = optim.AdamW(model.parameters(), lr = LEARNING_RATE )
         lr_scheduler = get_scheduler(
             'linear',
             optimizer = optimizer,
             num_warmup_steps=0,
-            num_training_steps = num_training_steps,
+            num_training_steps = NUM_EPOCHS*len(train_dataloader),
         )
-
-        for epoch in range(NUM_EPOCHS):
-            progress_bar_train = tqdm(range(len(train_dataloader)))
-            model.train()
-            for batch in train_dataloader:
-                batch = { k: v.to(device) for k, v in batch.items() }
-                outputs = model(**batch)
-                loss = outputs.loss
-                loss.backward()
-
-                optimizer.step()
-                lr_scheduler.step()
-                optimizer.zero_grad()
-                progress_bar_train.set_description(f"Epoch [{epoch+1}/{NUM_EPOCHS}]")
-                progress_bar_train.update(1)
         
-        print("Evaluate model to update weights")
-        model.eval()
+        for epoch in range(NUM_EPOCHS):
+            with tqdm(train_dataloader) as train_bar:
+                train_bar.set_description(f"Epoch [{epoch+1}/{NUM_EPOCHS}]")
+                model.train()   
+                for batch in train_dataloader:
+                    batch = { k: v.to(device) for k, v in batch.items() }
+                    outputs = model(**batch)
+                    loss = outputs.loss
+                    loss.backward()
+
+                    optimizer.step()
+                    lr_scheduler.step()
+                    optimizer.zero_grad()
+                    train_bar.update(1)
+                train_bar.close()
+        
 
         weights_tot = tokenized_datasets['train']['weight'].numpy().squeeze()
         pred_tot = []
         labels_tot = tokenized_datasets['train']['label'].numpy().squeeze()
-        progress_bar_val = tqdm(range(len(train_dataloader)))
-        for batch in train_dataloader:
-            batch = { k: v.to(device) for k, v in batch.items() }
-            with torch.no_grad():
-                outputs = model(**batch)
-            logits = outputs.logits
-            predictions = (logits >= THRESHOLD).int()
-            predictions[predictions == 0] = -1
-            pred_tot.extend(predictions.cpu().numpy().tolist())
 
-            progress_bar_val.update(1)
-
+        model.eval()
+        with tqdm(train_dataloader) as val_bar:
+            val_bar.set_description(f"Model evaluation for weights update")
+            for batch in train_dataloader:
+                batch = { k: v.to(device) for k, v in batch.items() }
+                with torch.no_grad():
+                    outputs = model(**batch)
+                logits = outputs.logits
+                predictions = (logits >= THRESHOLD).int()
+                predictions[predictions == 0] = -1
+                pred_tot.extend(predictions.cpu().numpy().tolist())
+                val_bar.update(1)
+            val_bar.close()
         pred_tot = np.array(pred_tot).squeeze()
         total_error = weights_tot[pred_tot != labels_tot].sum()
-        print("Total error = ",total_error)
+        alpha_flag = 1
+        if total_error > 0.5:
+            total_error = 1 - total_error
+            pred_tot = (-1) * pred_tot
+            alpha_flag = -1
         if total_error > 1e-10 and total_error < 1 - 1e-10:
             a = 0.5*np.log((1-total_error)/total_error)
-            alpha.append(a)
+            alpha.append(a*alpha_flag)
             weights_tot = weights_tot*np.exp((-1)*a*pred_tot*labels_tot)
             weights_tot = weights_tot/weights_tot.sum()
-        
-
+            print("Total error = {}    Alpha = {} \n".format(total_error,a*alpha_flag))
 
         tokenized_datasets["train"] = tokenized_datasets["train"].remove_columns("weight")
         tokenized_datasets["train"] = tokenized_datasets["train"].add_column("weight", weights_tot)
-    print("Alpha values ", alpha)
+        correct_predictions = 0
+        total_predictions = 0
+        model.eval()
+        with tqdm(test_dataloader) as test_bar:
+            test_bar.set_description(f"Test weak model")
+            for batch in test_dataloader:
+                batch = { k: v.to(device) for k, v in batch.items() }
+                with torch.no_grad():
+                    outputs = model(**batch)
+                logits = outputs.logits
+                predictions = (logits >= THRESHOLD).int().cpu()
+                predictions[predictions == 0] = -1
+                predictions = alpha_flag * predictions
+                correct_predictions += (predictions == batch['labels'].cpu()).sum().item()
+                total_predictions += len(batch['labels'])
+                test_bar.update(1)
+            test_bar.close()
+        print("WEAK MODEL ACCURACY ON TEST SET: ", correct_predictions / total_predictions)
 
-
-    test_dataloader = DataLoader(tokenized_datasets['test'], batch_size = BATCH_SIZE, collate_fn = data_collator)
+    
     correct_predictions = 0
     total_predictions = 0
 
     for model in weak_models:
         model.eval()
-    progress_bar_test = tqdm(range(len(test_dataloader)))
 
     metric_count = 0
-    for batch in test_dataloader:
-        batch = { k: v.to(device) for k, v in batch.items() }
-        final_pred = torch.zeros(batch["labels"].shape[0])
-        
-        for i, model in enumerate(weak_models):
-            with torch.no_grad():
-                outputs = model(**batch)
-            logits = outputs.logits
-            predictions = (logits >= THRESHOLD).int().cpu()
-            predictions[predictions == 0] = -1
-            final_pred = final_pred + alpha[i]*predictions.squeeze()
+    with tqdm(test_dataloader) as test_bar:
+        test_bar.set_description(f"Validation")
+        for batch in test_dataloader:
+            batch = { k: v.to(device) for k, v in batch.items() }
+            final_pred = torch.zeros(batch["labels"].shape[0])
+            
+            for i, model in enumerate(weak_models):
+                with torch.no_grad():
+                    outputs = model(**batch)
+                logits = outputs.logits
+                predictions = (logits >= THRESHOLD).int().cpu()
+                predictions[predictions == 0] = -1
+                final_pred = final_pred + alpha[i]*predictions.squeeze()
+            
             final_pred[final_pred >= 0] = 1
             final_pred[final_pred < 0] = -1
-
-        correct_predictions += (final_pred == batch['labels'].cpu()).sum().item()
-        total_predictions += len(batch['labels'])
-
-        progress_bar_test.update(1)
+            correct_predictions += (final_pred == batch['labels'].cpu()).sum().item()
+            total_predictions += len(batch['labels'])
+            test_bar.update(1)
+        test_bar.close()
     print("TEST ACC: ", correct_predictions / total_predictions)
 
 
@@ -226,9 +246,6 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
     del weak_models
     del optimizer
     del lr_scheduler
-    del progress_bar_train
-    del progress_bar_test
-    del progress_bar_val
     torch.cuda.empty_cache()
 
 
