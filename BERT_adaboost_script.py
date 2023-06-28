@@ -104,15 +104,15 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
 
     dataset = DatasetDict({'train': Dataset.from_pandas(train_fold), 'test': Dataset.from_pandas(test_fold)})
     # %%
+    dataset["train"] = dataset["train"].shuffle(seed=42)
+    dataset["test"] = dataset["test"].shuffle(seed=42)
 
     weights = np.full((dataset["train"].num_rows,),1/dataset["train"].num_rows)
     dataset["train"] = dataset["train"].add_column("weight", weights)
-    dataset = dataset.map(lambda x: {"label": [float(-1) if x["label"] == 0 else float(1) ]})
+    dataset = dataset.map(lambda x: {"label": [float(x["label"])]})
     tokenized_datasets = dataset.map(tokenize_function, batched=True)
 
     # %%
-    tokenized_datasets["train"] = tokenized_datasets["train"].shuffle(seed=42)
-    tokenized_datasets["test"] = tokenized_datasets["test"].shuffle(seed=42)
 
     tokenized_datasets["train"].set_format('torch', columns=["input_ids", "attention_mask", "label", "weight"] )
     tokenized_datasets["test"].set_format('torch', columns=["input_ids", "attention_mask", "label"] )
@@ -155,6 +155,7 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
         weights_tot = tokenized_datasets['train']['weight'].numpy().squeeze()
         pred_tot = []
         labels_tot = tokenized_datasets['train']['label'].numpy().squeeze()
+        labels_tot[labels_tot == 0] = -1
 
         model.eval()
         with tqdm(train_dataloader) as val_bar:
@@ -181,7 +182,7 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
             alpha.append(a*alpha_flag)
             weights_tot = weights_tot*np.exp((-1)*a*pred_tot*labels_tot)
             weights_tot = weights_tot/weights_tot.sum()
-            print("Total error = {}    Alpha = {} \n".format(total_error,a*alpha_flag))
+            print("Total error = {}    Alpha = {}".format(total_error,a*alpha_flag))
 
         tokenized_datasets["train"] = tokenized_datasets["train"].remove_columns("weight")
         tokenized_datasets["train"] = tokenized_datasets["train"].add_column("weight", weights_tot)
@@ -195,10 +196,12 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
                 with torch.no_grad():
                     outputs = model(**batch)
                 logits = outputs.logits
+                labels = batch["labels"].cpu()
+                labels[labels == 0] = -1
                 predictions = (logits >= THRESHOLD).int().cpu()
                 predictions[predictions == 0] = -1
                 predictions = alpha_flag * predictions
-                correct_predictions += (predictions == batch['labels'].cpu()).sum().item()
+                correct_predictions += (predictions == labels).sum().item()
                 total_predictions += len(batch['labels'])
                 test_bar.update(1)
             test_bar.close()
@@ -222,17 +225,22 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
                 with torch.no_grad():
                     outputs = model(**batch)
                 logits = outputs.logits
-                predictions = (logits >= THRESHOLD).int().cpu()
-                predictions[predictions == 0] = -1
+                predictions = logits.cpu()
+                predictions = torch.clamp(2*predictions-1,-1,1)
+                # predictions = (logits >= THRESHOLD).int().cpu()
+                # predictions[predictions == 0] = -1
                 final_pred = final_pred + alpha[i]*predictions.squeeze()
             
             final_pred[final_pred >= 0] = 1
             final_pred[final_pred < 0] = -1
-            correct_predictions += (final_pred == batch['labels'].cpu()).sum().item()
+            labels = batch["labels"].cpu().squeeze()
+            labels[labels == 0] = -1
+            correct_predictions += (final_pred == labels).sum().item()
             total_predictions += len(batch['labels'])
             test_bar.update(1)
         test_bar.close()
     print("TEST ACC: ", correct_predictions / total_predictions)
+    accuracies.append(correct_predictions / total_predictions)
 
 
     # %%
