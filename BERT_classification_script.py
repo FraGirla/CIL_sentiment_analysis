@@ -38,10 +38,10 @@ class CustomModel(nn.Module):
     def __init__(self, checkpoint, num_labels ):
         super(CustomModel, self).__init__()
         self.num_labels = num_labels
-        
-        self.model = AutoModel.from_pretrained(checkpoint, config = AutoConfig.from_pretrained(checkpoint, output_hidden_state = True ) )
+        self.config = AutoConfig.from_pretrained(checkpoint, output_hidden_state = True )
+        self.model = AutoModel.from_pretrained(checkpoint, config = self.config)
         self.dropout = nn.Dropout(0.15)
-        self.classifier = nn.Linear(768, num_labels )
+        self.classifier = nn.Linear(self.config.hidden_size, num_labels )
         
     def forward(self, input_ids = None, attention_mask=None, labels = None ):
         outputs = self.model(input_ids = input_ids, attention_mask = attention_mask  )
@@ -49,7 +49,7 @@ class CustomModel(nn.Module):
         last_hidden_state = outputs[0]
         sequence_outputs = self.dropout(last_hidden_state)
         
-        logits = self.classifier(sequence_outputs[:, 0, : ].view(-1, 768 ))
+        logits = self.classifier(sequence_outputs[:, 0, : ].view(-1, self.config.hidden_size))
         logits = torch.sigmoid(logits)
         loss = None
         if labels is not None:
