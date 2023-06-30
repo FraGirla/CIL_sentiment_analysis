@@ -75,8 +75,8 @@ torch.cuda.empty_cache()
 # %%
 print(torch.cuda.get_device_name(device))
 #get folds
-MAX_LEN=512
-NUM_EPOCHS = 1
+MAX_LEN=128
+NUM_EPOCHS = 2
 BATCH_SIZE = 16
 LEARNING_RATE = 2e-5
 
@@ -95,7 +95,7 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
     # %%
     from transformers import AutoTokenizer
 
-    hugging_face_model = "vinai/bertweet-large"
+    hugging_face_model = "vinai/bertweet-base"
     tokenizer = AutoTokenizer.from_pretrained(hugging_face_model)
 
     dataset = dataset.map(lambda x: {"label": [float(x["label"])]})
@@ -178,7 +178,7 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
     accuracies.append(correct_predictions / total_predictions)
 
     # %%
-    torch.save(model.state_dict(), "BERT_large_with_emb_punctuation.pt")
+    torch.save(model.state_dict(), "BERT_2ep_with_emb_punctuation.pt")
     del train_fold
     del test_fold
     del dataset
