@@ -1,14 +1,10 @@
-# %%
 #!pip install transformers
 #!pip install evaluate
 #!pip install datasets
 #!pip install datasets[audio]
 
-
-# %%
 #module load gcc/8.2.0 python_gpu/3.10.4 r/4.0.2 git-lfs/2.3.0 eth_proxy npm/6.14.9 libsndfile/1.0.23
 
-# %%
 import torch
 from datasets import load_dataset
 from datasets import DatasetDict
@@ -31,8 +27,12 @@ from torch.utils.data import DataLoader
 from transformers import get_scheduler
 import torch.optim as optim
 from tqdm.auto import tqdm
+from transformers import AutoTokenizer
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(torch.cuda.get_device_name(device))
+torch.cuda.empty_cache()
 
 class CustomModel(nn.Module):
     def __init__(self, checkpoint, num_labels ):
@@ -58,69 +58,55 @@ class CustomModel(nn.Module):
         else:
             return TokenClassifierOutput(loss=None, logits=logits, hidden_states=last_hidden_state)
 
-# %%
-# First make the kfold object
+# Kfold object
 folds = StratifiedKFold(n_splits=5)
 
-#create dataframes for train and test
+#create pandas dataframe for training dataset
 train_df = pd.read_csv('preprocessed/train_full.csv')
+
+#remove unused columns
+train_df = train_df.drop(columns=['tweet', 'tokenized_tweet', 'tokenized_tweet_no_stopwords', 'text'])
+
 #drop nan
 train_df.dropna(inplace=True)
-print(train_df.info())
-folds_datasets = []
-accuracies = []
-# %%
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-torch.cuda.empty_cache()
-# %%
-print(torch.cuda.get_device_name(device))
-#get folds
+
+print(train_df.info)
+
+
 MAX_LEN=128
 NUM_EPOCHS = 2
 BATCH_SIZE = 16
 LEARNING_RATE = 2e-5
+hugging_face_model = "vinai/bertweet-base"
 
 def tokenize_function(examples):
     return tokenizer(examples["partial_clean_tweet"], max_length=MAX_LEN, padding='longest',)
 
+accuracies = []
 for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df['label'])):
     print ("Fold {}".format(fold_))
     train_fold = train_df.iloc[train_index]
     test_fold = train_df.iloc[test_index]
-    #remove unused columns
-    train_fold = train_fold.drop(columns=['tweet', 'tokenized_tweet', 'tokenized_tweet_no_stopwords', 'text'])
-    test_fold = test_fold.drop(columns=['tweet', 'tokenized_tweet', 'tokenized_tweet_no_stopwords', 'text'])
 
     dataset = DatasetDict({'train': Dataset.from_pandas(train_fold), 'test': Dataset.from_pandas(test_fold)})
-    # %%
-    from transformers import AutoTokenizer
 
-    hugging_face_model = "vinai/bertweet-base"
     tokenizer = AutoTokenizer.from_pretrained(hugging_face_model)
 
     dataset = dataset.map(lambda x: {"label": [float(x["label"])]})
     tokenized_datasets = dataset.map(tokenize_function, batched=True)
 
-    # %%
     tokenized_datasets["train"] = tokenized_datasets["train"].shuffle(seed=42)
     tokenized_datasets["test"] = tokenized_datasets["test"].shuffle(seed=42)
 
     tokenized_datasets.set_format('torch', columns=["input_ids", "attention_mask", "label"] )
 
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
-    # %%
 
-    train_dataloader = DataLoader(
-        tokenized_datasets['train'], shuffle = True, batch_size = BATCH_SIZE, collate_fn = data_collator
-    )
+    train_dataloader = DataLoader(tokenized_datasets['train'], shuffle = True, batch_size = BATCH_SIZE, collate_fn = data_collator)
 
-    test_dataloader = DataLoader(
-        tokenized_datasets['test'], batch_size = BATCH_SIZE, collate_fn = data_collator
-    )
+    test_dataloader = DataLoader(tokenized_datasets['test'], batch_size = BATCH_SIZE, collate_fn = data_collator)
 
     model = CustomModel(checkpoint=hugging_face_model, num_labels=1).to(device)
-
-    # %%
 
     optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE)
 
@@ -128,8 +114,7 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
         'linear',
         optimizer = optimizer,
         num_warmup_steps=0,
-        num_training_steps = NUM_EPOCHS*len(train_dataloader),
-        
+        num_training_steps = NUM_EPOCHS*len(train_dataloader),   
     )
 
     model.train()
@@ -147,16 +132,13 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
                 optimizer.zero_grad()
                 train_bar.update(1)
             train_bar.close()
-            
 
-    # %%
     threshold = 0.5
     correct_predictions = 0
     total_predictions = 0
     metric_count = 0
 
     model.eval()
-    
     with tqdm(test_dataloader) as test_bar:
         test_bar.set_description(f"Validation")
         for batch in test_dataloader:
@@ -173,11 +155,10 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
             test_bar.update(1)
         test_bar.close()
             
-    print("TEST ACC: ", correct_predictions / total_predictions)
-    print("TEST BCE: ", metric_count / len(test_dataloader))
+    print("Test Accuracy: ", correct_predictions / total_predictions)
+    print("Test BinaryCrossEntropy: ", metric_count / len(test_dataloader))
     accuracies.append(correct_predictions / total_predictions)
 
-    # %%
     torch.save(model.state_dict(), "BERT_2ep_with_emb_punctuation.pt")
     del train_fold
     del test_fold
@@ -193,8 +174,8 @@ for fold_, (train_index, test_index) in enumerate(folds.split(train_df, train_df
     torch.cuda.empty_cache()
 
 
-print("mean acc: ", sum(accuracies) / len(accuracies))
-print("std acc: ", np.std(accuracies))
+print("Mean accuracy: ", sum(accuracies) / len(accuracies))
+print("Std accuracy: ", np.std(accuracies))
 
 
 
