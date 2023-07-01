@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH -n 10
-#SBATCH --time=96:00:00
+#SBATCH --time=360:00:00
 #SBATCH --mem-per-cpu=5000
 #SBATCH --tmp=4000                        # per node!!
 #SBATCH --job-name=bert_grid
