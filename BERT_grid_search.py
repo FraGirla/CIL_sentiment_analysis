@@ -81,6 +81,8 @@ def tokenize_function(examples):
 for LEARNING_RATE in [2e-5, 3e-5, 5e-5]:
     for BATCH_SIZE in [16, 32, 64]:
         for NUM_EPOCHS in [1, 2 ,3]:
+            if LEARNING_RATE == 2e-5 and BATCH_SIZE == 16 and NUM_EPOCHS != 3:
+                continue
             folds = StratifiedKFold(n_splits=5)
             folds_datasets = []
             accuracies = []
@@ -180,9 +182,6 @@ for LEARNING_RATE in [2e-5, 3e-5, 5e-5]:
                 print("TEST ACC: ", correct_predictions / total_predictions)
                 print("TEST BCE: ", metric_count / len(test_dataloader))
                 accuracies.append(correct_predictions / total_predictions)
-
-                # %%
-                torch.save(model.state_dict(), "BERT_2ep_with_emb_punctuation.pt")
                 del train_fold
                 del test_fold
                 del dataset
