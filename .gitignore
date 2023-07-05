@@ -4,3 +4,4 @@ preprocessed/*.csv
 twitter-datasets/*
 saved_models/*
 Prediction.csv
+__pycache__/
