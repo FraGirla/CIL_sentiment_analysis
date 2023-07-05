@@ -66,7 +66,7 @@ class AWP:
         adv_param="weight",
         adv_lr=0.00001,
         adv_eps=0.001,
-        start_epoch=2,
+        adv_epoch=2,
         adv_step=1,
     ):
         self.model = model
@@ -74,13 +74,13 @@ class AWP:
         self.adv_param = adv_param
         self.adv_lr = adv_lr
         self.adv_eps = adv_eps
-        self.start_epoch = start_epoch
+        self.adv_epoch = adv_epoch
         self.adv_step = adv_step
         self.backup = {}
         self.backup_eps = {}
 
     def attack_backward(self, batch, epoch):
-        if (self.adv_lr == 0) or (epoch+1 < self.start_epoch):
+        if (self.adv_lr == 0) or (epoch+1 < self.adv_epoch):
             return None
 
         self._save() 
