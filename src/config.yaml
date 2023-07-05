@@ -1,7 +1,7 @@
 general:
   seed: 42
-  train_path: 'preprocessed/train_full.csv'
-  test_path: 'preprocessed/test_full.csv'
+  train_path: '../preprocessed/train_full.csv'
+  test_path: '../preprocessed/test_full.csv'
   batch_size: 64
   n_folds: 5
   lr: 2.e-5
@@ -41,3 +41,5 @@ ensemble:
     'cardiffnlp/twitter-roberta-base-sentiment-latest',
   ]
   
+inference:
+  weights: [0.9,0.89,0.91]
