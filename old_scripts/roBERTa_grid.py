@@ -42,7 +42,7 @@ torch.cuda.empty_cache()
 print(torch.cuda.get_device_name(device))
 for learning_rate in [2e-5, 3e-5, 5e-5]:
     for BATCH_SIZE in [16, 32, 64]:
-        for num_epoch in [1, 2 ,3]:
+        for num_epoch in [1, 2, 3]:
             # First make the kfold object
             folds = StratifiedKFold(n_splits=5)
             #get folds
@@ -66,12 +66,12 @@ for learning_rate in [2e-5, 3e-5, 5e-5]:
                 MAX_LEN=128
                 from transformers import AutoTokenizer
 
-                hugging_face_model = "cardiffnlp/twitter-roberta-base-sentiment-latest"
+                hugging_face_model = "roberta-large"
                 tokenizer = AutoTokenizer.from_pretrained(hugging_face_model)
 
 
                 def tokenize_function(examples):
-                    return tokenizer(examples["partial_clean_tweet"], max_length=MAX_LEN, padding='max_length',)
+                    return tokenizer(examples["partial_clean_tweet"], max_length=MAX_LEN, padding='longest',)
 
                 dataset = dataset.map(lambda x: {"label": [float(x["label"])]})
                 tokenized_datasets = dataset.map(tokenize_function, batched=True)
@@ -98,7 +98,8 @@ for learning_rate in [2e-5, 3e-5, 5e-5]:
                         
                         self.model = AutoModel.from_pretrained(checkpoint, config = AutoConfig.from_pretrained(checkpoint, output_hidden_state = True ) )
                         self.dropout = nn.Dropout(0.15)
-                        self.classifier = nn.Linear(768, num_labels )
+                        #get the output len of the last layer
+                        self.classifier = nn.Linear(self.model.config.hidden_size, self.num_labels)
                         
                     def forward(self, input_ids = None, attention_mask=None, labels = None ):
                         outputs = self.model(input_ids = input_ids, attention_mask = attention_mask  )
@@ -106,7 +107,7 @@ for learning_rate in [2e-5, 3e-5, 5e-5]:
                         last_hidden_state = outputs[0]
                         sequence_outputs = self.dropout(last_hidden_state)
                         
-                        logits = self.classifier(sequence_outputs[:, 0, : ].view(-1, 768 ))
+                        logits = self.classifier(sequence_outputs[:, 0, : ].view(-1, self.model.config.hidden_size))
                         logits = torch.sigmoid(logits)
                         loss = None
                         if labels is not None:
@@ -134,36 +135,16 @@ for learning_rate in [2e-5, 3e-5, 5e-5]:
 
                 # %%
                 for name, param in model.named_parameters():
-                    if "encoder.layer.0"  in name:
-                        param.requires_grad=True
-                    elif "encoder.layer.1."  in name:
-                        param.requires_grad=True
-                    elif "encoder.layer.2"  in name:
-                        param.requires_grad=True
-                    elif "encoder.layer.3"  in name:
-                        param.requires_grad=True
-                    elif "encoder.layer.4"  in name:
-                        param.requires_grad=True
-                    elif "encoder.layer.5"  in name:
-                        param.requires_grad=True
-                    elif "encoder.layer.6"  in name:
-                        param.requires_grad=True
-                    elif "encoder.layer.7"  in name:
-                        param.requires_grad=True
-                    elif "encoder.layer.8"  in name:
-                        param.requires_grad=True
-                    elif "encoder.layer.9"  in name:
-                        param.requires_grad=True
-                    elif "encoder.layer.10"  in name:
-                        param.requires_grad=True
-                    elif "encoder.layer.11"  in name:
-                        param.requires_grad=True
+                    if "encoder.layer"  in name:
+                        if int(name.split('.')[3]) > 8:
+                            param.requires_grad=False
+                            #print(name)
                     elif "embeddings"  in name:
-                        param.requires_grad=True
+                        param.requires_grad=False
+                        #print(name)
                     else:
                         #print(name)
                         pass
-
                 # %%
                 from transformers import get_scheduler
 
@@ -176,7 +157,7 @@ for learning_rate in [2e-5, 3e-5, 5e-5]:
                     'linear',
                     optimizer = optimizer,
                     num_warmup_steps=0,
-                    num_training_steps = num_training_steps,
+                    num_training_steps = num_training_steps * num_epoch,
                     
                 )
 
@@ -196,8 +177,7 @@ for learning_rate in [2e-5, 3e-5, 5e-5]:
                         optimizer.step()
                         lr_scheduler.step()
                         optimizer.zero_grad()
-                        progress_bar_train.set_description(f"Loss: {loss.item():.3f}")
-                        progress_bar_train.set_description(f"EPOCH: {epoch}")
+                        progress_bar_train.set_postfix(loss=loss.item(), lr=optimizer.param_groups[0]["lr"])                        
                         progress_bar_train.update(1)
                         
                 # %%
@@ -206,7 +186,7 @@ for learning_rate in [2e-5, 3e-5, 5e-5]:
                 total_predictions = 0
 
                 model.eval()
-                progress_bar_test = tqdm(range(num_epoch * len(test_dataloader) ))
+                progress_bar_test = tqdm(range(len(test_dataloader) ))
 
                 metric_count = 0
                 for batch in test_dataloader:
@@ -227,7 +207,7 @@ for learning_rate in [2e-5, 3e-5, 5e-5]:
                 accuracies.append(correct_predictions / total_predictions)
 
                 # %%
-                torch.save(model.state_dict(), "./saved_models/roBERTa_12_layers_with_emb_light_pre_with_punc.pt")
+                #torch.save(model.state_dict(), "./saved_models/roBERTa_large_12_layers_with_emb_light_pre_with_punc.pt")
                 del train_fold
                 del test_fold
                 del dataset
