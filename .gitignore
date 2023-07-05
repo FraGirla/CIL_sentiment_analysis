@@ -1,6 +1,6 @@
 .idea/
 ethz-cil-text-classification-2023.zip
-preprocessed/*
+preprocessed/*.csv
 twitter-datasets/*
 saved_models/*
 Prediction.csv
