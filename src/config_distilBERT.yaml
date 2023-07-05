@@ -1,0 +1,45 @@
+general:
+  seed: 42
+  train_path: '../preprocessed/train_full.csv'
+  test_path: '../preprocessed/test_full.csv'
+  batch_size: 64
+  n_folds: 5
+  lr: 2.e-5
+  num_epochs: 2
+  column_text_name: 'partial_clean_tweet'
+  column_label_name: 'label'
+  awp: False
+  grid: True
+  ensemble: False
+  debug: False
+  use_subsampling: False
+
+subsampling:
+  train: 100
+  test: 50
+
+model:
+  max_len: 128
+  name: "distilbert-base-uncased"
+  classification_dropout: 0.15
+  require_grad: True
+
+adversarial:
+  adv_lr: 1.e-5
+  adv_eps: 1.e-3
+  adv_epoch: 2
+
+grid:
+  lr: [2.e-5]
+  batch_size: [16, 32, 64]
+  num_epochs: [1, 2, 3]
+
+ensemble:
+  strategy: 'avg'
+  model_names: [
+    'vinai/bertweet-base',
+    'cardiffnlp/twitter-roberta-base-sentiment-latest',
+  ]
+  
+inference:
+  weights: [0.9,0.89,0.91]

@@ -209,7 +209,7 @@ def cross_val(train_df):
 
 if __name__ == '__main__':
     
-    config = get_config('config.yaml')
+    config = get_config('config_distilBERT.yaml')
     config = dictionary_to_namespace(config)
 
     if config.general.debug:
