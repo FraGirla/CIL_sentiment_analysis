@@ -116,3 +116,16 @@ num_epochs 2
 roBERTa 12 layers with embedding partial_clean_tweet (BEST on roBERTa)
 mean acc:  0.9078350639217334
 std acc:  0.002451552736652662
+
+-------------------------------------------------------------
+
+BATCH_SIZE 64
+learning_rate 2e-5
+dropout classification 0.15
+MAX_LEN 128
+
+num_epochs 2
+
+ensemble (roBERTa and BERTweet) 12 layers with embedding partial_clean_tweet
+mean acc:  0.921875
+std acc:  0.01711632992203644
