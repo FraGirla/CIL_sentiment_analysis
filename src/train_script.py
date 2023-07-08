@@ -119,21 +119,24 @@ def training(dataset):
     del lr_scheduler
     return model, accuracy, test_dataloader
 
-def evaluate_ensemble(models, test_dataloader, weights):
+def evaluate_ensemble(models, test_dataloaders, weights):
     for model in models:
         model.eval()
     correct_predictions = 0
     total_predictions = 0
     THRESHOLD = 0.5
-    with tqdm(test_dataloader) as test_bar:
+    with tqdm(test_dataloaders[0]) as test_bar:
         test_bar.set_description(f"Evaluating Ensemble")
-        for batch in test_dataloader:
-            batch = { k: v.to(device) for k, v in batch.items() }
-            final_pred = torch.zeros(batch["labels"].shape[0])
+        for batch_number in range(len(test_dataloaders[0])):
+            batches = []
+            for i in range(len(test_dataloaders)):
+                batch = next(iter(test_dataloaders[i]))
+                batches.append({ k: v.to(device) for k, v in batch.items() })
+            final_pred = torch.zeros(batches[0]["labels"].shape[0])
             
             for i, model in enumerate(models):
                 with torch.no_grad():
-                    outputs = model(**batch)
+                    outputs = model(**batches[i])
                 logits = outputs.logits.cpu()
                 predictions = logits
                 if config.ensemble.strategy == "avg":
@@ -149,10 +152,10 @@ def evaluate_ensemble(models, test_dataloader, weights):
 
             final_pred[final_pred >= 0] = 1
             final_pred[final_pred < 0] = -1
-            labels = batch["labels"].cpu().squeeze()
+            labels = batches[i]["labels"].cpu().squeeze()
             labels[labels == 0] = -1
             correct_predictions += (final_pred == labels).sum().item()
-            total_predictions += len(batch['labels'])
+            total_predictions += len(batches[i]['labels'])
             test_bar.set_postfix(acc = round(correct_predictions / total_predictions, 6))
             test_bar.update(1)
         test_bar.close()
@@ -179,14 +182,16 @@ def cross_val(train_df):
         if config.general.ensemble:
             models = []
             weights = []
+            test_dataloaders = []
             for model_name in config.ensemble.model_names:
                 print("Training model: ", model_name)
                 config.model.name = model_name
                 model, weight, test_dataloader = training(dataset)
                 models.append(model)
                 weights.append(weight)
+                test_dataloaders.append(test_dataloader)
         
-            accuracy = evaluate_ensemble(models, test_dataloader, weights)
+            accuracy = evaluate_ensemble(models, test_dataloaders, weights)
             accuracies.append(accuracy)
             for model in models:
                 del model
@@ -209,7 +214,7 @@ def cross_val(train_df):
 
 if __name__ == '__main__':
     
-    config = get_config('config_distilBERT.yaml')
+    config = get_config('config.yaml')
     config = dictionary_to_namespace(config)
 
     if config.general.debug:
