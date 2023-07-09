@@ -90,20 +90,23 @@ def training(dataset):
     del lr_scheduler
     return model, test_dataloader
 
-def generate_predictions_ensemble(models, test_dataloader, weights):
+def generate_predictions_ensemble(models, test_dataloaders, weights):
     for model in models:
         model.eval()
     THRESHOLD = 0.5
     final_predictions = []
-    with tqdm(test_dataloader) as test_bar:
+    with tqdm(test_dataloaders[0]) as test_bar:
         test_bar.set_description(f"Evaluating Ensemble")
-        for batch in test_dataloader:
-            batch = { k: v.to(device) for k, v in batch.items() }
-            final_pred = torch.zeros(batch["input_ids"].shape[0])
+        for batch_number in range(len(test_dataloaders[0])):
+            batches = []
+            for i in range(len(test_dataloaders)):
+                batch = next(iter(test_dataloaders[i]))
+                batches.append({ k: v.to(device) for k, v in batch.items() })
+            final_pred = torch.zeros(batches[0]["input_ids"].shape[0])
             
             for i, model in enumerate(models):
                 with torch.no_grad():
-                    outputs = model(**batch)
+                    outputs = model(**batches[i])
                 predictions = outputs.logits.cpu()
                 if config.ensemble.strategy == "avg":
                     predictions = torch.clamp(2*predictions-1,-1,1)
@@ -180,13 +183,15 @@ if __name__ == '__main__':
     if config.general.ensemble:
         models = []
         weights = config.inference.weights
+        test_dataloaders = []
         for model_name in config.ensemble.model_names:
             print("Training model: ", model_name)
             config.model.name = model_name
             model, test_dataloader = training(dataset)
             models.append(model)
+            test_dataloaders.append(test_dataloader)
     
-        predictions = generate_predictions_ensemble(models, test_dataloader, weights)
+        predictions = generate_predictions_ensemble(models, test_dataloaders, weights)
         for model in models:
             del model
         del models
