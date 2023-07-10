@@ -15,6 +15,7 @@ import torch.optim as optim
 from tqdm.auto import tqdm
 from utils import *
 
+
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(torch.cuda.get_device_name(device))
@@ -72,7 +73,7 @@ def train_loop(model, optimizer, lr_scheduler, train_dataloader, test_dataloader
                 predictions = (logits >= threshold).int()
                 correct_predictions += (predictions == batch['labels']).sum().item()
                 total_predictions += len(batch['labels'])
-                test_bar.set_postfix(loss = (metric_count / (count+1)).item(), acc = round(correct_predictions / total_predictions, 6))
+                test_bar.set_postfix({'loss': str(round((metric_count / (count+1)).item(),7)) , 'acc': str(round(correct_predictions / total_predictions,7))})
                 test_bar.update(1)
             test_bar.close()
         if (epoch+1) == config.general.num_epochs:
@@ -156,7 +157,7 @@ def evaluate_ensemble(models, test_dataloaders, weights):
             labels[labels == 0] = -1
             correct_predictions += (final_pred == labels).sum().item()
             total_predictions += len(batches[i]['labels'])
-            test_bar.set_postfix(acc = round(correct_predictions / total_predictions, 6))
+            test_bar.set_postfix({'acc': str(round(correct_predictions / total_predictions,7))})
             test_bar.update(1)
         test_bar.close()
     return correct_predictions / total_predictions
