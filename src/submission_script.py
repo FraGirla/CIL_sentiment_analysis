@@ -67,7 +67,6 @@ def training(dataset):
     train_dataloader = DataLoader(tokenized_datasets['train'], shuffle = True, batch_size = config.general.batch_size, collate_fn = data_collator)
 
     test_dataloader = DataLoader(tokenized_datasets['test'], batch_size = config.general.batch_size, collate_fn = data_collator)
-
     model = CustomModel(checkpoint=config.model.name, num_labels=1, classifier_dropout=config.model.classification_dropout).to(device)
 
     freeze_layers(model,config.model.require_grad)
@@ -97,12 +96,14 @@ def generate_predictions_ensemble(models, test_dataloaders, weights):
     final_predictions = []
     with tqdm(test_dataloaders[0]) as test_bar:
         test_bar.set_description(f"Evaluating Ensemble")
+        iterators = [iter(data_loader) for data_loader in test_dataloaders]
         for batch_number in range(len(test_dataloaders[0])):
             batches = []
             for i in range(len(test_dataloaders)):
-                batch = next(iter(test_dataloaders[i]))
+                batch = next(iterators[i])
                 batches.append({ k: v.to(device) for k, v in batch.items() })
             final_pred = torch.zeros(batches[0]["input_ids"].shape[0])
+            print(final_pred.shape)
             
             for i, model in enumerate(models):
                 with torch.no_grad():
