@@ -128,10 +128,11 @@ def evaluate_ensemble(models, test_dataloaders, weights):
     THRESHOLD = 0.5
     with tqdm(test_dataloaders[0]) as test_bar:
         test_bar.set_description(f"Evaluating Ensemble")
+        iterators = [iter(data_loader) for data_loader in test_dataloaders]
         for batch_number in range(len(test_dataloaders[0])):
             batches = []
             for i in range(len(test_dataloaders)):
-                batch = next(iter(test_dataloaders[i]))
+                batch = next(iterators[i])
                 batches.append({ k: v.to(device) for k, v in batch.items() })
             final_pred = torch.zeros(batches[0]["labels"].shape[0])
             
