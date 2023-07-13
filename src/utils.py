@@ -35,6 +35,8 @@ def update_to_lora(layer, r=8):
     lora_layer.weight = pretrained_weight
     lora_layer.bias = pretrained_bias
 
+    #lora.mark_only_lora_as_trainable(model) # ricordatevi di fare questo prima di fare il training
+    #num_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad) # con questo controllate che il numero di parametri sia giusto
     return lora_layer
 
 def freeze_layers(model, require_grad):
