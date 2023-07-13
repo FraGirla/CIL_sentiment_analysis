@@ -126,7 +126,8 @@ mean acc:  0.8949234739811537
 std acc:  0.0026915223650484667
 
 ensemble (roBERTa, BERTweet, distilBERT - avg) 12 layers with embedding partial_clean_tweet
-CURRENTLY DOING
+mean acc:  0.9133001220414941
+std acc:  0.0026821156489913343
 
 num_epochs 3
 
