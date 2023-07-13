@@ -5,6 +5,8 @@ from transformers import AutoModel,AutoConfig
 from transformers.modeling_outputs import TokenClassifierOutput
 from types import SimpleNamespace
 import yaml 
+import loralib as lora
+
 def get_config(config_path):
     with open(config_path, 'r') as stream:
         try:
@@ -23,6 +25,17 @@ def dictionary_to_namespace(data):
     else:
         return data
 
+def update_to_lora(layer, r=8):
+    in_features = layer.in_features
+    out_features = layer.out_features
+
+    pretrained_weight = layer.weight
+    pretrained_bias = layer.bias
+    lora_layer = lora.Linear(in_features, out_features, r=r, lora_alpha=r)
+    lora_layer.weight = pretrained_weight
+    lora_layer.bias = pretrained_bias
+
+    return lora_layer
 
 def freeze_layers(model, require_grad):
     for name, param in model.named_parameters():

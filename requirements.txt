@@ -7,3 +7,4 @@ transformers
 scikit-learn
 torch
 emoji
+loralib
