@@ -185,6 +185,10 @@ ensemble (roBERTa, BERTweet - avg) 12 layers with embedding partial_clean_tweet
 mean acc:  0.921875
 std acc:  0.01711632992203644
 
+TwHIN_BERT 12 layers with embedding partial_clean_tweet
+mean acc: 0.9033351
+std acc: 0.0024155
+
 num_epochs 3
 
 BERT 12 layers with embedding partial_clean_tweet 
