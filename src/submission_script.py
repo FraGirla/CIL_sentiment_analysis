@@ -152,6 +152,7 @@ if __name__ == '__main__':
     
     config = get_config('config.yaml')
     config = dictionary_to_namespace(config)
+    set_seed(config.general.seed)
 
     if config.general.debug:
         transformers.logging.set_verbosity_debug()

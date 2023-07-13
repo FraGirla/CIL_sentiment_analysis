@@ -6,6 +6,9 @@ from transformers.modeling_outputs import TokenClassifierOutput
 from types import SimpleNamespace
 import yaml 
 import loralib as lora
+import numpy as np
+import random
+import os
 
 def get_config(config_path):
     with open(config_path, 'r') as stream:
@@ -13,6 +16,16 @@ def get_config(config_path):
             return yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
+
+def set_seed(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(seed)
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+
 
 def dictionary_to_namespace(data):
     if type(data) is list:
