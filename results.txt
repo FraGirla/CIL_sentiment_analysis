@@ -181,10 +181,6 @@ distilBERT 12 layers with embedding partial_clean_tweet
 mean acc:  0.8948650541184003
 std acc:  0.0025017242255875516
 
-ensemble (roBERTa, BERTweet - avg) 12 layers with embedding partial_clean_tweet
-mean acc:  0.921875
-std acc:  0.01711632992203644
-
 TwHIN_BERT 12 layers with embedding partial_clean_tweet
 mean acc: 0.9033351
 std acc: 0.0024155
@@ -198,3 +194,14 @@ std acc:  0.0023901977261908225
 distilBERT 12 layers with embedding partial_clean_tweet
 mean acc:  0.8952579877158232
 std acc:  0.0025448153625205407
+
+-------------------------------------------------------------
+
+BATCH_SIZE 128
+learning_rate 2e-5
+dropout classification 0.15
+MAX_LEN 128/512 (BERT 128 / roBERTa 128)
+
+ensemble (roBERTa, BERTweet - avg) 12 layers with embedding partial_clean_tweet
+mean acc:  0.9155420843086649
+std acc:  0.002558821241916289
