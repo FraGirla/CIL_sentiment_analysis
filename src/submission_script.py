@@ -103,7 +103,6 @@ def generate_predictions_ensemble(models, test_dataloaders, weights):
                 batch = next(iterators[i])
                 batches.append({ k: v.to(device) for k, v in batch.items() })
             final_pred = torch.zeros(batches[0]["input_ids"].shape[0])
-            print(final_pred.shape)
             
             for i, model in enumerate(models):
                 with torch.no_grad():

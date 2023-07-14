@@ -205,3 +205,4 @@ MAX_LEN 128/512 (BERT 128 / roBERTa 128)
 ensemble (roBERTa, BERTweet - avg) 12 layers with embedding partial_clean_tweet
 mean acc:  0.9155420843086649
 std acc:  0.002558821241916289
+ON KAGGLE PUBLIC: 0.91660
