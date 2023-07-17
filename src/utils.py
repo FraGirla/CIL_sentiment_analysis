@@ -52,10 +52,29 @@ def update_to_lora(layer, r=8):
     #num_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad) # con questo controllate che il numero di parametri sia giusto
     return lora_layer
 
-def freeze_layers(model, require_grad):
-    for name, param in model.named_parameters():
-        if 'encoder' in name or 'embeddings' in name:
-            param.requires_grad = require_grad
+def config_layers(model, require_grad, lora_bool, lora_params):
+    if require_grad == False:
+        if not require_grad:
+            print("All layers are frozen")
+
+        for name, param in model.named_parameters():
+            if 'encoder' in name or 'embeddings' in name:
+                param.requires_grad = require_grad
+    elif lora_bool: 
+        print("Lora is enabled")
+        for attention_layer in model.model.encoder.layer:
+            attention_layer.attention.self.query = update_to_lora(attention_layer.attention.self.query, r=lora_params.rq)
+            attention_layer.attention.self.key = update_to_lora(attention_layer.attention.self.key, r=lora_params.rk)
+            attention_layer.attention.self.value = update_to_lora(attention_layer.attention.self.value, r=lora_params.rv)
+            attention_layer.attention.output.dense = update_to_lora(attention_layer.attention.output.dense, r=lora_params.rd)
+        lora.mark_only_lora_as_trainable(model)
+    else:
+        print("Lora is disabled, all layers are trainable")
+
+    num_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    # Print the number of trainable parameters
+    print("Number of trainable parameters:", num_trainable_params)
+
     
 
 class CustomModel(nn.Module):

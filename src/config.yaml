@@ -2,10 +2,7 @@ general:
   seed: 42
   train_path: '../preprocessed/train_full.csv'
   test_path: '../preprocessed/test_full.csv'
-  batch_size: 64
   n_folds: 5
-  lr: 2.e-5
-  num_epochs: 2
   column_text_name: 'partial_clean_tweet'
   column_label_name: 'label'
   awp: False
@@ -15,14 +12,23 @@ general:
   use_subsampling: False
 
 subsampling:
-  train: 100
-  test: 50
+  train: 300
+  test: 300
 
 model:
+  name: 'vinai/bertweet-base'
+  batch_size: 64
+  lr: 2.e-5
+  num_epochs: 2
   max_len: 128
-  name: "vinai/bertweet-base"
   classification_dropout: 0.15
-  require_grad: False
+  require_grad: True
+  lora: True
+  lora_params: 
+    rq: 8
+    rk: 8
+    rv: 8
+    rd: 8
 
 adversarial:
   adv_lr: 1.e-5
@@ -30,15 +36,45 @@ adversarial:
   adv_epoch: 2
 
 grid:
-  lr: [2.e-5, 3.e-5]
-  batch_size: [16, 32, 64]
-  num_epochs: [1, 2, 3]
+  lr: [2.e-5]
+  batch_size: [64]
+  num_epochs: [1, 2]
 
 ensemble:
   strategy: 'avg'
-  model_names: [
-    'vinai/bertweet-base',
-    'cardiffnlp/twitter-roberta-base-sentiment-latest',
+  models: [
+    {
+      name: 'vinai/bertweet-base',
+      batch_size: 64,
+      lr: 2.e-5,
+      num_epochs: 2,
+      max_len: 128,
+      classification_dropout: 0.15,
+      require_grad: True,
+      lora: True,
+      lora_params: {
+        rq: 8,
+        rk: 8,
+        rv: 8,
+        rd: 8,
+      }
+    },
+    {
+      name: 'cardiffnlp/twitter-roberta-base-sentiment-latest',
+      batch_size: 64,
+      lr: 2.e-5,
+      num_epochs: 2,
+      max_len: 128,
+      classification_dropout: 0.15,
+      require_grad: False,
+      lora: False,
+      lora_params: {
+        rq: 8,
+        rk: 8,
+        rv: 8,
+        rd: 8,
+      }
+    },
   ]
   
 inference:
