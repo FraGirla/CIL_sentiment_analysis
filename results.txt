@@ -30,7 +30,8 @@ mean acc:  0.8922649700898304
 std acc:  0.002273580409090531
 
 BERT 12 layers no embedding clean_tweet 
-mean: 0.89558 std: 0.00126
+mean acc: 0.89558 
+std acc: 0.00126
 ON KAGGLE PUBLIC: 0.8968
 
 roBERTa 12 layers with embedding partial_clean_tweet
@@ -143,8 +144,6 @@ distilBERT 12 layers with embedding partial_clean_tweet
 mean acc:  0.8944917271872438
 std acc:  0.002465297054377858
 
-ensemble (roBERTa, BERTweet, distilBERT - avg) 12 layers with embedding partial_clean_tweet
-CURRENTLY DOING
 
 -------------------------------------------------------------
 
@@ -167,6 +166,10 @@ distilBERT 12 layers with embedding partial_clean_tweet
 mean acc:  0.8914899065682332
 std acc:  0.0007752614985841124
 
+ensemble (roBERTa, BERTweet - avg) 12 layers with embedding partial_clean_tweet
+mean acc:  0.9125722745733549
+std acc:  0.002385719360845971
+
 num_epochs 2
 
 roBERTa 12 layers with embedding partial_clean_tweet (BEST on roBERTa)
@@ -185,6 +188,10 @@ TwHIN_BERT 12 layers with embedding partial_clean_tweet
 mean acc: 0.9033351
 std acc: 0.0024155
 
+ensemble (roBERTa, BERTweet - avg) 12 layers with embedding partial_clean_tweet
+mean acc:  0.9157261468899426
+std acc:  0.002542241815489397
+
 num_epochs 3
 
 BERT 12 layers with embedding partial_clean_tweet 
@@ -202,7 +209,19 @@ learning_rate 2e-5
 dropout classification 0.15
 MAX_LEN 128/512 (BERT 128 / roBERTa 128)
 
+num_epochs 1
+
 ensemble (roBERTa, BERTweet - avg) 12 layers with embedding partial_clean_tweet
+mean acc:  0.9120945121341254
+std acc:  0.0025957656482455686
+
+num_epochs 2
+
+ensemble (roBERTa, BERTweet - avg) 12 layers with embedding partial_clean_tweet (no AWP)
+mean acc:  0.9146933957545565
+std acc:  0.0026071055624712187
+
+ensemble (roBERTa, BERTweet - avg) 12 layers with embedding partial_clean_tweet (with AWP)
 mean acc:  0.9155420843086649
 std acc:  0.002558821241916289
 ON KAGGLE PUBLIC: 0.91660
