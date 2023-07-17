@@ -54,8 +54,7 @@ def update_to_lora(layer, r=8):
 
 def config_layers(model, require_grad, lora_bool, lora_params):
     if require_grad == False:
-        if not require_grad:
-            print("All layers are frozen")
+        print("All layers are frozen")
 
         for name, param in model.named_parameters():
             if 'encoder' in name or 'embeddings' in name:
