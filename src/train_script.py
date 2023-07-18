@@ -198,24 +198,26 @@ def cross_val(train_df):
             test_dataloaders = []
             for model_cfg in config.ensemble.models:
                 model_cfg = dictionary_to_namespace(model_cfg)
-                if config.general.wandb:
-                    wandb.init( 
-                        project='CIL_sentiment_analysis', 
-                        job_type='train', 
-                        name=f'{ts}_fold_{fold_}_{model_cfg.name}',
-                        config=model_cfg)
-                    wandb.config.fold = fold_
-                    wandb.config.model = model_cfg.name
                 print("Training model: ", model_cfg.name)
                 config.model.name = model_cfg.name
-                config.model.batch_size = model_cfg.batch_size
-                config.model.lr = model_cfg.lr
-                config.model.num_epochs = model_cfg.num_epochs
+                if not config.general.grid: 
+                    config.model.batch_size = model_cfg.batch_size
+                    config.model.lr = model_cfg.lr
+                    config.model.num_epochs = model_cfg.num_epochs
                 config.model.max_len = model_cfg.max_len
                 config.model.classification_dropout = model_cfg.classification_dropout
                 config.model.require_grad = model_cfg.require_grad
                 config.model.lora = model_cfg.lora
                 config.model.lora_params = model_cfg.lora_params
+
+                if config.general.wandb:
+                    wandb.init( 
+                        project='CIL_sentiment_analysis', 
+                        job_type='train', 
+                        name=f'{ts}_fold_{fold_}_{model_cfg.name}',
+                        config=config.model)
+                    wandb.config.fold = fold_
+                    wandb.config.model = model_cfg.name
 
                 model, weight, test_dataloader = training(dataset)
                 models.append(model)
@@ -229,7 +231,12 @@ def cross_val(train_df):
                     job_type='eval', 
                     name=f'{ts}_evaluate_ensemble_fold_{fold_}')
                 wandb.config.fold = fold_
-                wandb.config.name = 'ensemble'
+                wandb.config.ensemble_strategy = config.ensemble.strategy
+                model_names = ''
+                for i, model_cfg in enumerate(config.ensemble.models):
+                    model_cfg = dictionary_to_namespace(model_cfg)
+                    model_names += model_cfg.name + ' '
+                wandb.config.name = model_names
                 accuracy = evaluate_ensemble(models, test_dataloaders, weights)
                 wandb.finish()
             accuracies.append(accuracy)
@@ -251,7 +258,7 @@ def cross_val(train_df):
 
             del model
         if config.general.wandb:
-            wandb.join()
+            wandb.finish()
 
         del train_fold
         del test_fold
@@ -271,6 +278,7 @@ if __name__ == '__main__':
         transformers.logging.set_verbosity_debug()
     else:
         transformers.logging.set_verbosity_error()   
+        os.environ["WANDB_SILENT"] = "true"
 
 
     #create pandas dataframe for training dataset
