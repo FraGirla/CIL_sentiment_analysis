@@ -14,12 +14,14 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 from tqdm.auto import tqdm
 from utils import *
-
+import wandb
+import time
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(torch.cuda.get_device_name(device))
 torch.cuda.empty_cache()
+ts = int(time.time())
 
 
 def tokenize_function(examples,tokenizer):
@@ -48,6 +50,9 @@ def train_loop(model, optimizer, lr_scheduler, train_dataloader, test_dataloader
                 if config.general.awp:
                     awp.attack_backward(batch,epoch)
                 
+                if config.general.wandb:
+                    wandb.log({"loss": loss})
+
                 optimizer.step()
                 lr_scheduler.step()
                 optimizer.zero_grad()
@@ -73,6 +78,8 @@ def train_loop(model, optimizer, lr_scheduler, train_dataloader, test_dataloader
                 predictions = (logits >= threshold).int()
                 correct_predictions += (predictions == batch['labels']).sum().item()
                 total_predictions += len(batch['labels'])
+                if config.general.wandb:
+                    wandb.log({'acc': float(str(round(correct_predictions / total_predictions,7)))})
                 test_bar.set_postfix({'loss': str(round((metric_count / (count+1)).item(),7)) , 'acc': str(round(correct_predictions / total_predictions,7))})
                 test_bar.update(1)
             test_bar.close()
@@ -160,6 +167,8 @@ def evaluate_ensemble(models, test_dataloaders, weights):
             labels[labels == 0] = -1
             correct_predictions += (final_pred == labels).sum().item()
             total_predictions += len(batches[i]['labels'])
+            if config.general.wandb:
+                wandb.log({'acc': float(round(correct_predictions / total_predictions,7))})
             test_bar.set_postfix({'acc': str(round(correct_predictions / total_predictions,7))})
             test_bar.update(1)
         test_bar.close()
@@ -189,6 +198,14 @@ def cross_val(train_df):
             test_dataloaders = []
             for model_cfg in config.ensemble.models:
                 model_cfg = dictionary_to_namespace(model_cfg)
+                if config.general.wandb:
+                    wandb.init( 
+                        project='CIL_sentiment_analysis', 
+                        job_type='train', 
+                        name=f'{ts}_fold_{fold_}_{model_cfg.name}',
+                        config=model_cfg)
+                    wandb.config.fold = fold_
+                    wandb.config.model = model_cfg.name
                 print("Training model: ", model_cfg.name)
                 config.model.name = model_cfg.name
                 config.model.batch_size = model_cfg.batch_size
@@ -204,19 +221,37 @@ def cross_val(train_df):
                 models.append(model)
                 weights.append(weight)
                 test_dataloaders.append(test_dataloader)
-        
-            accuracy = evaluate_ensemble(models, test_dataloaders, weights)
+                if config.general.wandb:
+                    wandb.finish()
+            if config.general.wandb:
+                wandb.init( 
+                    project='CIL_sentiment_analysis', 
+                    job_type='eval', 
+                    name=f'{ts}_evaluate_ensemble_fold_{fold_}')
+                wandb.config.fold = fold_
+                wandb.config.name = 'ensemble'
+                accuracy = evaluate_ensemble(models, test_dataloaders, weights)
+                wandb.finish()
             accuracies.append(accuracy)
             for model in models:
                 del model
             del models
 
         else:
-            
+            if config.general.wandb:
+                wandb.init( 
+                        project='CIL_sentiment_analysis', 
+                        job_type='train', 
+                        name=f'fold_{fold_}',
+                        config=model_cfg)
+                wandb.config.fold = fold_
+                wandb.config.model = config.model.name
             model, accuracy, _ = training(dataset)
             accuracies.append(accuracy)
 
             del model
+        if config.general.wandb:
+            wandb.join()
 
         del train_fold
         del test_fold
@@ -258,5 +293,9 @@ if __name__ == '__main__':
                     config.model.num_epochs = num_epoch
                     print("lr: {}\nbatch_size: {}\nnum_epochs: {}".format(learning_rate,batch_size,num_epoch))
                     cross_val(train_df)
+                    if config.general.wandb:
+                        wandb.finish()
     else:
         cross_val(train_df)
+        if config.general.wandb:
+            wandb.finish()

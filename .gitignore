@@ -5,3 +5,4 @@ twitter-datasets/*
 saved_models/*
 Prediction.csv
 __pycache__/
+src/wandb

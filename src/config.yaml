@@ -10,6 +10,7 @@ general:
   ensemble: True
   debug: False
   use_subsampling: False
+  wandb: False
 
 subsampling:
   train: 300
