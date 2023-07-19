@@ -103,7 +103,7 @@ def training(dataset):
 
     train_dataloader = DataLoader(tokenized_datasets['train'], shuffle = True, batch_size = config.model.batch_size, collate_fn = data_collator)
 
-    test_dataloader = DataLoader(tokenized_datasets['test'], batch_size = config.model.batch_size, collate_fn = data_collator)
+    test_dataloader = DataLoader(tokenized_datasets['test'], batch_size = config.general.test_batch, collate_fn = data_collator)
 
     model = CustomModel(checkpoint=config.model.name, num_labels=1, classifier_dropout=config.model.classification_dropout).to(device)
 
@@ -239,6 +239,8 @@ def cross_val(train_df):
                 wandb.config.name = model_names
                 accuracy = evaluate_ensemble(models, test_dataloaders, weights)
                 wandb.finish()
+            else:
+                accuracy = evaluate_ensemble(models, test_dataloaders, weights)
             accuracies.append(accuracy)
             for model in models:
                 del model
