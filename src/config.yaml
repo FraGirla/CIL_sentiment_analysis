@@ -6,7 +6,6 @@ general:
   test_batch: 128
   column_text_name: 'partial_clean_tweet'
   column_label_name: 'label'
-  awp: True
   grid: False
   ensemble: True
   debug: False
@@ -25,6 +24,7 @@ model:
   max_len: 128
   classification_dropout: 0.15
   require_grad: True
+  awp: True
   lora: False
   lora_params: 
     rq: 8
@@ -53,6 +53,7 @@ ensemble:
       max_len: 128,
       classification_dropout: 0.15,
       require_grad: False,
+      awp: True,
       lora: False,
       lora_params: {
         rq: 8,
@@ -69,6 +70,7 @@ ensemble:
       max_len: 128,
       classification_dropout: 0.15,
       require_grad: False,
+      awp: False,
       lora: False,
       lora_params: {
         rq: 8,

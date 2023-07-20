@@ -26,7 +26,7 @@ def tokenize_function(examples,tokenizer):
 
 def train_loop(model, optimizer, lr_scheduler, train_dataloader, test_dataloader):
 
-    if config.general.awp:
+    if config.model.awp:
         awp = AWP(model=model,
         optimizer=optimizer,
         adv_lr=config.adversarial.adv_lr,
@@ -44,7 +44,7 @@ def train_loop(model, optimizer, lr_scheduler, train_dataloader, test_dataloader
                 loss = outputs.loss
                 loss.backward()
 
-                if config.general.awp:
+                if config.model.awp:
                     awp.attack_backward(batch,epoch)
                 
                 optimizer.step()
@@ -198,6 +198,7 @@ if __name__ == '__main__':
             config.model.max_len = model_cfg.max_len
             config.model.classification_dropout = model_cfg.classification_dropout
             config.model.require_grad = model_cfg.require_grad
+            config.model.awp = model_cfg.awp
             config.model.lora = model_cfg.lora
             config.model.lora_params = model_cfg.lora_params
 
