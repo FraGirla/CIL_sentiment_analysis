@@ -9,7 +9,7 @@ general:
   grid: False
   ensemble: True
   debug: False
-  use_subsampling: True
+  use_subsampling: False
   wandb: False
 
 subsampling:
@@ -47,12 +47,12 @@ ensemble:
   models: [
     {
       name: 'vinai/bertweet-base',
-      batch_size: 128,
+      batch_size: 64,
       lr: 2.e-5,
       num_epochs: 2,
       max_len: 128,
       classification_dropout: 0.15,
-      require_grad: False,
+      require_grad: True,
       awp: True,
       lora: False,
       lora_params: {
@@ -63,14 +63,14 @@ ensemble:
       }
     },
     {
-      name: 'vinai/bertweet-base',
+      name: 'vinai/bertweet-large',
       batch_size: 64,
       lr: 2.e-5,
       num_epochs: 2,
       max_len: 128,
       classification_dropout: 0.15,
-      require_grad: False,
-      awp: False,
+      require_grad: True,
+      awp: True,
       lora: False,
       lora_params: {
         rq: 8,
