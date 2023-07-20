@@ -226,6 +226,10 @@ mean acc:  0.9155420843086649
 std acc:  0.002558821241916289
 ON KAGGLE PUBLIC: 0.91660
 
+ensemble (bertweet-large, bertweet-base, roBERTa, TwHIN_BERT) (with AWP)
+mean acc:  0.9170614008762978
+std acc:  0.0026564300717972383
+
 -------------------------------------------------------------
 
 BATCH_SIZE 256
