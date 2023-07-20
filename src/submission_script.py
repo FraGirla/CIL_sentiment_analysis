@@ -33,10 +33,10 @@ def train_loop(model, optimizer, lr_scheduler, train_dataloader, test_dataloader
         adv_eps=config.adversarial.adv_eps,
         adv_epoch=config.adversarial.adv_epoch)
 
-    for epoch in range(config.general.num_epochs):
+    for epoch in range(config.model.num_epochs):
         model.train()
         with tqdm(train_dataloader) as train_bar:
-            train_bar.set_description(f"Epoch [{epoch+1}/{config.general.num_epochs}]")
+            train_bar.set_description(f"Epoch [{epoch+1}/{config.model.num_epochs}]")
             for batch in train_dataloader:
                 batch = { k: v.to(device) for k, v in batch.items() }
 
@@ -64,20 +64,22 @@ def training(dataset):
 
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
-    train_dataloader = DataLoader(tokenized_datasets['train'], shuffle = True, batch_size = config.general.batch_size, collate_fn = data_collator)
+    train_dataloader = DataLoader(tokenized_datasets['train'], shuffle = True, batch_size = config.model.batch_size, collate_fn = data_collator)
 
-    test_dataloader = DataLoader(tokenized_datasets['test'], batch_size = config.general.batch_size, collate_fn = data_collator)
+    test_dataloader = DataLoader(tokenized_datasets['test'], batch_size = config.general.test_batch, collate_fn = data_collator)
     model = CustomModel(checkpoint=config.model.name, num_labels=1, classifier_dropout=config.model.classification_dropout).to(device)
 
-    freeze_layers(model,config.model.require_grad)
+    config_layers(model,config.model.require_grad,config.model.lora,config.model.lora_params)
 
-    optimizer = optim.AdamW(model.parameters(), lr=config.general.lr)
+    model.to(device)
+
+    optimizer = optim.AdamW(model.parameters(), lr=config.model.lr)
 
     lr_scheduler = get_scheduler(
         'linear',
         optimizer = optimizer,
         num_warmup_steps=0,
-        num_training_steps = config.general.num_epochs*len(train_dataloader),   
+        num_training_steps = config.model.num_epochs*len(train_dataloader),   
     )
 
     train_loop(model, optimizer, lr_scheduler, train_dataloader, test_dataloader)
@@ -185,9 +187,20 @@ if __name__ == '__main__':
         models = []
         weights = config.inference.weights
         test_dataloaders = []
-        for model_name in config.ensemble.model_names:
-            print("Training model: ", model_name)
-            config.model.name = model_name
+        for model_cfg in config.ensemble.models:
+            model_cfg = dictionary_to_namespace(model_cfg)
+            print("Training model: ", model_cfg.name)
+
+            config.model.name = model_cfg.name
+            config.model.batch_size = model_cfg.batch_size
+            config.model.lr = model_cfg.lr
+            config.model.num_epochs = model_cfg.num_epochs
+            config.model.max_len = model_cfg.max_len
+            config.model.classification_dropout = model_cfg.classification_dropout
+            config.model.require_grad = model_cfg.require_grad
+            config.model.lora = model_cfg.lora
+            config.model.lora_params = model_cfg.lora_params
+
             model, test_dataloader = training(dataset)
             models.append(model)
             test_dataloaders.append(test_dataloader)
