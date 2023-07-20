@@ -217,6 +217,10 @@ std acc:  0.0025957656482455686
 
 num_epochs 2
 
+BERTweet large 12 layers with embedding partial_clean_tweet (AWP)
+mean acc: 0.91764
+std acc: 0.00274
+
 ensemble (roBERTa, BERTweet - avg) 12 layers with embedding partial_clean_tweet (no AWP)
 mean acc:  0.9146933957545565
 std acc:  0.0026071055624712187
