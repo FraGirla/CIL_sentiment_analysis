@@ -9,3 +9,4 @@ torch
 emoji
 loralib
 wandb
+wordsegment
