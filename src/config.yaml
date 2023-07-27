@@ -1,10 +1,10 @@
 general:
   seed: 42
-  train_path: '../preprocessed/train_full.csv'
-  test_path: '../preprocessed/test_full.csv'
+  train_path: '../preprocessed/train_full_new.csv'
+  test_path: '../preprocessed/test_full_new.csv'
   n_folds: 5
   test_batch: 128
-  column_text_name: 'partial_clean_tweet'
+  column_text_name: 'text'
   column_label_name: 'label'
   grid: False
   ensemble: True
@@ -13,8 +13,8 @@ general:
   wandb: False
 
 subsampling:
-  train: 200
-  test: 200
+  train: 50
+  test: 50
 
 model:
   name: 'vinai/bertweet-base'
@@ -72,6 +72,23 @@ ensemble:
       require_grad: True,
       awp: True,
       lora: False,
+      lora_params: {
+        rq: 8,
+        rk: 8,
+        rv: 8,
+        rd: 8,
+      }
+    },
+    {
+      name: 'vinai/bertweet-large',
+      batch_size: 64,
+      lr: 1.e-4,
+      num_epochs: 3,
+      max_len: 128,
+      classification_dropout: 0.15,
+      require_grad: True,
+      awp: False,
+      lora: True,
       lora_params: {
         rq: 8,
         rk: 8,
