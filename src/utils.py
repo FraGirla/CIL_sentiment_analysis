@@ -213,7 +213,7 @@ class AWP:
 
     def _save(self):
         """
-        Save the current model parameters as backup for restoring later
+        Save the current model parameters with names self.adv_param as backup for restoring later
         """
         for name, param in self.model.named_parameters():
             if param.requires_grad and param.grad is not None and self.adv_param in name:
@@ -227,7 +227,7 @@ class AWP:
 
     def _restore(self):
         """
-        Restore the model parameters from the saved backup
+        Restore the model parameters with names self.adv_param from the saved backup
         """
         for name, param in self.model.named_parameters():
             if name in self.backup:
