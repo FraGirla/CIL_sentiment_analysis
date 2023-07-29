@@ -1,4 +1,3 @@
-
 import torch
 import torch.nn as nn
 from transformers import AutoModel,AutoConfig
@@ -11,6 +10,15 @@ import random
 import os
 
 def get_config(config_path):
+    """
+    Reads YAML configuration file and returns its content as a dictionary
+
+    Args:
+        config_path (str): The file path of the YAML configuration file
+
+    Returns:
+        dict: A dictionary containing the configuration data
+    """
     with open(config_path, 'r') as stream:
         try:
             return yaml.safe_load(stream)
@@ -18,6 +26,9 @@ def get_config(config_path):
             print(exc)
 
 def set_seed(seed):
+    """
+    Sets random number generator seeds for PyTorch and NumPy to ensure reproducibility of results.
+    """
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
@@ -28,6 +39,9 @@ def set_seed(seed):
 
 
 def dictionary_to_namespace(data):
+    """
+    Converts a nested dictionary into a namespace object for easy attribute access.
+    """
     if type(data) is list:
         return list(map(dictionary_to_namespace, data))
     elif type(data) is dict:
@@ -39,6 +53,15 @@ def dictionary_to_namespace(data):
         return data
 
 def update_to_lora(layer, r=8):
+    """
+    Adapt a layer by replacing it with counterparts implemented in loralib
+
+    Args:
+        layer (torch.nn.Module): The layer to be updated with LoRA
+
+    Returns:
+        r (int, optional): LoRA hyperparameter. Default is 8.
+    """
     in_features = layer.in_features
     out_features = layer.out_features
 
@@ -48,11 +71,21 @@ def update_to_lora(layer, r=8):
     lora_layer.weight = pretrained_weight
     lora_layer.bias = pretrained_bias
 
-    #lora.mark_only_lora_as_trainable(model) # ricordatevi di fare questo prima di fare il training
-    #num_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad) # con questo controllate che il numero di parametri sia giusto
     return lora_layer
 
 def config_layers(model, require_grad, lora_bool, lora_params):
+    """
+    Configures the model's layers based on whether they need to be trainable and whether to use LoRA.
+
+    Args:
+        model (CustomModel): Model whose layers need to be configured.
+        require_grad (bool): If False, all layers are frozen.
+        lora_bool (bool): If True, LoRA is enabled for attention layers.
+        lora_params (types.SimpleNamespace): LoRA configuration parameters.
+
+    Returns:
+        None
+    """
     if require_grad == False:
         print("All layers are frozen")
 
@@ -71,12 +104,19 @@ def config_layers(model, require_grad, lora_bool, lora_params):
         print("Lora is disabled, all layers are trainable")
 
     num_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    # Print the number of trainable parameters
     print("Number of trainable parameters:", num_trainable_params)
 
     
 
 class CustomModel(nn.Module):
+    """
+    A custom PyTorch module representing a text classification model based on a pre-trained transformer model.
+
+    Args:
+        checkpoint (str): The name of the pre-trained transformer model.
+        num_labels (int): The number of labels for the classification task.
+        classifier_dropout (float, optional): The dropout rate for the classifier. Default is 0.1.
+    """
     def __init__(self, checkpoint, num_labels, classifier_dropout = 0.1 ):
         super(CustomModel, self).__init__()
         self.num_labels = num_labels
@@ -88,6 +128,7 @@ class CustomModel(nn.Module):
     def forward(self, input_ids = None, attention_mask=None, labels = None ):
         outputs = self.model(input_ids = input_ids, attention_mask = attention_mask  )
         
+        #get last layer output
         last_hidden_state = outputs[0]
         sequence_outputs = self.dropout(last_hidden_state)
         
@@ -101,6 +142,19 @@ class CustomModel(nn.Module):
             return TokenClassifierOutput(loss=None, logits=logits, hidden_states=last_hidden_state)
 
 class AWP:
+    """Adversarial Weight Perturbation.
+
+    This class applies adversarial weight perturbation to a given model during training. Source: https://github.com/rohitsingh02/kaggle-feedback-english-language-learning-1st-place-solution/tree/main
+
+    Args:
+        model (torch.nn.Module): The model on which the perturbation will be applied.
+        optimizer (torch.optim.Optimizer): The optimizer used to train the model.
+        adv_param (str, optional): The name of the parameter to perturb. Default is "weight".
+        adv_lr (float, optional): Adversarial learning rate. Default is 0.00001.
+        adv_eps (float, optional): Adversarial epsilon value. Default is 0.001.
+        adv_epoch (int, optional): The epoch from which to start adversarial perturbation. Default is 2.
+        adv_step (int, optional): The number of adversarial perturbation steps per epoch. Default is 1.
+    """
     def __init__(
         self,
         model,
@@ -122,6 +176,15 @@ class AWP:
         self.backup_eps = {}
 
     def attack_backward(self, batch, epoch):
+        """Perform adversarial attack on the model.
+
+        Args:
+            batch (dict): The batch of input data for the model.
+            epoch (int): The current epoch number.
+
+        Returns:
+            None
+        """
         if (self.adv_lr == 0) or (epoch+1 < self.adv_epoch):
             return None
 
@@ -136,6 +199,9 @@ class AWP:
         self._restore()
 
     def _attack_step(self):
+        """Perform a single step of adversarial perturbation
+        The perturbation is calculated based on the gradients. 
+        """
         e = 1e-6
         for name, param in self.model.named_parameters():
             if param.requires_grad and param.grad is not None and self.adv_param in name:
@@ -149,6 +215,7 @@ class AWP:
                     )
 
     def _save(self):
+        """Save the current model parameters as backup for restoring later"""
         for name, param in self.model.named_parameters():
             if param.requires_grad and param.grad is not None and self.adv_param in name:
                 if name not in self.backup:
@@ -159,7 +226,8 @@ class AWP:
                         self.backup[name] + grad_eps,
                     )
 
-    def _restore(self,):
+    def _restore(self):
+        """Restore the model parameters from the saved backup"""
         for name, param in self.model.named_parameters():
             if name in self.backup:
                 param.data = self.backup[name]
