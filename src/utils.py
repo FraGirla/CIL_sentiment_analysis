@@ -12,12 +12,6 @@ import os
 def get_config(config_path):
     """
     Reads YAML configuration file and returns its content as a dictionary
-
-    Args:
-        config_path (str): The file path of the YAML configuration file
-
-    Returns:
-        dict: A dictionary containing the configuration data
     """
     with open(config_path, 'r') as stream:
         try:
@@ -142,7 +136,8 @@ class CustomModel(nn.Module):
             return TokenClassifierOutput(loss=None, logits=logits, hidden_states=last_hidden_state)
 
 class AWP:
-    """Adversarial Weight Perturbation.
+    """
+    Adversarial Weight Perturbation
 
     This class applies adversarial weight perturbation to a given model during training. Source: https://github.com/rohitsingh02/kaggle-feedback-english-language-learning-1st-place-solution/tree/main
 
@@ -176,7 +171,8 @@ class AWP:
         self.backup_eps = {}
 
     def attack_backward(self, batch, epoch):
-        """Perform adversarial attack on the model.
+        """
+        Perform adversarial attack on the model.
 
         Args:
             batch (dict): The batch of input data for the model.
@@ -199,7 +195,8 @@ class AWP:
         self._restore()
 
     def _attack_step(self):
-        """Perform a single step of adversarial perturbation
+        """
+        Perform a single step of adversarial perturbation
         The perturbation is calculated based on the gradients. 
         """
         e = 1e-6
@@ -215,7 +212,9 @@ class AWP:
                     )
 
     def _save(self):
-        """Save the current model parameters as backup for restoring later"""
+        """
+        Save the current model parameters as backup for restoring later
+        """
         for name, param in self.model.named_parameters():
             if param.requires_grad and param.grad is not None and self.adv_param in name:
                 if name not in self.backup:
@@ -227,7 +226,9 @@ class AWP:
                     )
 
     def _restore(self):
-        """Restore the model parameters from the saved backup"""
+        """
+        Restore the model parameters from the saved backup
+        """
         for name, param in self.model.named_parameters():
             if name in self.backup:
                 param.data = self.backup[name]
