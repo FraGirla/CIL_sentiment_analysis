@@ -79,4 +79,5 @@ We obtained 0.92080 on the public leaderboard with an ensemble of three models:
 * BERTweet-base
 * BERTweet-large
 * BERTweet-large using LoRA (Low-Rank Adaptation)
-Models has been trained on a NVIDIA A100 80GB PCIe on Euler Cluster using [script.sh](src/script.sh)
+
+Models has been trained on a NVIDIA A100 80GB PCIe on Euler Cluster using [script.sh](src/train.sh)
