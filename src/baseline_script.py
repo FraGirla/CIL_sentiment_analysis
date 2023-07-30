@@ -1,10 +1,8 @@
 import torch
 import numpy as np
 import pandas as pd
-import numpy as np
 from sklearn.model_selection import StratifiedKFold
 import os
-
 from utils import *
 import time
 from sklearn.metrics import accuracy_score
@@ -24,6 +22,19 @@ torch.cuda.empty_cache()
 ts = int(time.time())
 
 def training(X_train, y_train, X_test, y_test, model_name):
+    """
+    Train and evaluate a model.
+
+    Args:
+        X_train (numpy.ndarray): Training data features.
+        y_train (numpy.ndarray): Training data labels.
+        X_test (numpy.ndarray): Test data features.
+        y_test (numpy.ndarray): Test data labels.
+        model_name (str): Name of the model to train.
+
+    Returns:
+        tuple: A tuple containing accuracy score and predicted labels.
+    """
     print("training model", model_name)
     if model_name=='LogisticRegression':
         model = LogisticRegression(n_jobs=-1, random_state=config.general.seed, solver='saga')
@@ -53,6 +64,17 @@ def training(X_train, y_train, X_test, y_test, model_name):
 
 
 def cross_val(train_df, embedding, model):
+    """
+    Perform k-fold cross-validation on the dataset using a specified embedding technique and model.
+
+    Args:
+        train_df (pandas.DataFrame): The training dataset.
+        embedding (str): The embedding technique to use.
+        model (str): The model to train.
+
+    Returns:
+        None
+    """
     accuracies = []
 
     folds = StratifiedKFold(n_splits=config.general.n_folds)
@@ -98,7 +120,7 @@ def cross_val(train_df, embedding, model):
     print("std acc: ", np.std(accuracies))
 
 if __name__ == '__main__':
-    
+    #Load the configuration from 'config.yaml'
     config = get_config('config.yaml')
     config = dictionary_to_namespace(config)
     set_seed(config.general.seed)
@@ -111,8 +133,10 @@ if __name__ == '__main__':
 
     #drop every column except text and label
     train_df = train_df[[config.general.column_text_name,config.general.column_label_name]]
+
     #rename columns
     train_df.columns = ['text','label']
+
     for embedding in ['bow','tfidf']:
         for model in ['LogisticRegression', 'SVC', 'XGBClassifier','GradientBoostingClassifier']:
             print(f"Embedding: {embedding}, Model: {model}")

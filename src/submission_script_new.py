@@ -191,7 +191,6 @@ def generate_predictions(model, test_dataloader):
 
 
 if __name__ == '__main__':
-
     #Load the configuration from 'config.yaml'
     config = get_config('config.yaml')
     config = dictionary_to_namespace(config)

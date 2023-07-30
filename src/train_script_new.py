@@ -326,7 +326,7 @@ def cross_val(train_df):
     print("std acc: ", np.std(accuracies))
 
 if __name__ == '__main__':
-    
+    #Load the configuration from 'config.yaml'
     config = get_config('config.yaml')
     config = dictionary_to_namespace(config)
     set_seed(config.general.seed)
