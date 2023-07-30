@@ -76,7 +76,25 @@ The code generates a Prediction.csv file, which is ready for submission on Kaggl
 ## 5. Results
 Performances of every training and cross-validation are stored in [results.txt](results.txt).
 
-We obtained 0.92080 on the public leaderboard with an ensemble of three models:
+The table below shows the most significant performances obtained:
+
+| Model                              | Accuracy(\%)     | Variance(\%) |
+|------------------------------------|------------------|--------------|
+| BoW + Logistic Regression          | 80.23            | 0.208        |
+| TFIDF + Logistic Regression        | 80.18            | 0.207        |
+| BoW + LinearSVM                    | 73.22            | 0.382        |
+| TFIDF + LinearSVM                  | 71.32            | 0.382        |
+| BoW + XGBClassifier                | 75.71            | 0.239        |
+| TFIDF + XGBClassifier              | 76.28            | 0.193        |
+| BoW + GradientBoostingClassifier   | 69.98            | 0.149        |
+| TFIDF + GradientBoostingClassifier | 70.03            | 0.232        |
+| GloVe + LSTM                       | 86.57            | 0.07         |
+| distilBERT                         | 89.61            | 0.239        |
+| roBERTaTweet                       | 90.78            | 0.245        |
+| BERTweet-base                      | 91.43            | 0.247        |
+| Enhanced BERTweet ensemble         | $\mathbf{92.02}$ | 0.249        |
+
+The strongest performance (**Enhanced BERTweet ensemble**) was obtained with an ensemble of three models:
 * BERTweet-base
 * BERTweet-large
 * BERTweet-large using LoRA (Low-Rank Adaptation)
