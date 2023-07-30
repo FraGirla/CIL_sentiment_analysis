@@ -50,23 +50,31 @@ TFIDF + GradientBoostingClassifier
 # Transformers models:
 
 First attempts on cardiffnlp/twitter-roberta-base-sentiment
+
 training 0 layers: 0.7809
+
 training 1 layers: 0.8261
+
 training 2 layers no embedding: 0.8319
+
 training 6 layers no embedding ~0.84
+
 training 12 layers no embedding ~0.852
+
 training 6 layers no embedding clean_tweet 0.8929
+
 training 12 layers no embedding no preprocessing ~0.83
+
 training 12 layers with embedding no preprocessing 0.8266
 
 -------------------------------------------------------------
 
-Hyperparameters
-BATCH_SIZE 32
-learning_rate 5e-5
-dropout classification 0.1
-num_epoch 1
-MAX_LEN 128/512 (BERT 128 / roBERTa 512)
+## Hyperparameters:
+* BATCH_SIZE 32
+* learning_rate 5e-5
+* dropout classification 0.1
+* num_epoch 1
+* MAX_LEN 128/512 (BERT 128 / roBERTa 512)
 
 roBERTa 12 layers no embedding clean_tweet
 mean acc:  0.8923125862793351
