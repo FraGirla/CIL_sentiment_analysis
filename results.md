@@ -1,40 +1,39 @@
 # Baselines
 
 BoW + LogisticRegression (solver:sage)
-mean acc:  0.8023419962787347
-std acc:  0.0020851275577559026
+* mean acc:  0.8023419962787347
+* std acc:  0.0020851275577559026
 
 Bow + LinearSVC
-mean acc:  0.7322389612468239
-std acc:  0.003308177849289995
+* mean acc:  0.7322389612468239
+* std acc:  0.003308177849289995
 
 Bow + XGBClassifier
-mean acc:  0.7571470299901967
-std acc:  0.002386290879788144
+* mean acc:  0.7571470299901967
+* std acc:  0.002386290879788144
 
 Bow + GradientBoostingClassifier
-mean acc:  0.699838745173359
-std acc:  0.0014779866473545802
+* mean acc:  0.699838745173359
+* std acc:  0.0014779866473545802
 
 TFIDF + LogisticRegression (solver:sage)
-mean acc:  0.8018114158813997
-std acc:  0.002074899902368564
+* mean acc:  0.8018114158813997
+* std acc:  0.002074899902368564
 
 TFIDF + LinearSVC
-mean acc:  0.7131920853090051
-std acc:  0.003817513336296751
+* mean acc:  0.7131920853090051
+* std acc:  0.003817513336296751
 
 TFIDF + XGBClassifier
-mean acc:  0.7627509353180081
-std acc:  0.0019348882102178692
+* mean acc:  0.7627509353180081
+* std acc:  0.0019348882102178692
 
 TFIDF + GradientBoostingClassifier
-mean acc:  0.7002572874777424
-std acc:  0.002315283288343248
+* mean acc:  0.7002572874777424
+* std acc:  0.002315283288343248
 
 -------------------------------------------------------------
-TRANSFORMERS MODELS:
--------------------------------------------------------------
+# Transformers models:
 
 First attempts on cardiffnlp/twitter-roberta-base-sentiment
 training 0 layers: 0.7809
