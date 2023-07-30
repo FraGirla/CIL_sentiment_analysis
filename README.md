@@ -1,6 +1,7 @@
 # Computational Intelligence Lab 2023 -- Text Sentiment Classification
 
 ### Enrico Brusoni, Francesco Girlanda, Timon Kick, Matteo Mazzonelli
+### Group: Molto CIL
 Department of Computer Science, ETH Zurich, Switzerland
 
 ## 1. Project definition
