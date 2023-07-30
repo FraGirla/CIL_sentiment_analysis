@@ -1,7 +1,5 @@
 # Computational Intelligence Lab 2023 -- Text Sentiment Classification
 
-![Python package](https://github.com/oskopek/cil/workflows/Python%20package/badge.svg)
-
 ### Enrico Brusoni, Francesco Girlanda, Timon Kick, Matteo Mazzonelli
 Department of Computer Science, ETH Zurich, Switzerland
 
