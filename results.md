@@ -1,12 +1,16 @@
 # Baselines
 
 BoW + LogisticRegression (solver:sage)
+
 mean acc:  0.8023419962787347
+
 std acc:  0.0020851275577559026
 
 
 Bow + LinearSVC
+
 mean acc:  0.7322389612468239
+
 std acc:  0.003308177849289995
 
 
