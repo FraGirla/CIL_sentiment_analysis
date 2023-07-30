@@ -72,3 +72,11 @@ cd ./src
 python submission_script.py
 ```
 The code generates a Prediction.csv file, which is ready for submission on Kaggle.
+
+## 5. Results
+Performances of every cross validation are stored in [results.txt](results.txt).
+We obtained 0.92080 on the public leaderboard with an ensemble of three models:
+* BERTweet-base
+* BERTweet-large
+* BERTweet-large using LoRA (Low-Rank Adaptation)
+Models has been trained on a NVIDIA A100 80GB PCIe on Euler Cluster using [script.sh](src/script.sh)
