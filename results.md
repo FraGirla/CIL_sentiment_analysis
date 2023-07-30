@@ -1,6 +1,6 @@
 # Baselines
 
-BoW + LogisticRegression (solver:sage) &rarr mean: 0.80234   std: 0.00208
+BoW + LogisticRegression (solver:sage) &rarr; mean: 0.80234   std: 0.00208
 * mean acc:  0.80234
 * std acc:  0.00208
 
