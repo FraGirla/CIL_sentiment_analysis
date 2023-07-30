@@ -29,7 +29,7 @@ python preprocess_train.py
 
 ### 4.1. Baselines models
 
-Specify training dataset path in the `./src/config.yaml` file, then run
+Specify training dataset path in the [config.yaml](src/config.yaml) file, then run
 
 ```
 cd ./src
@@ -38,7 +38,7 @@ python baseline_script.py
 
 ### 4.2. Train cross validation
 
-Define all the parameters in the `./src/config.yaml` file to perform a k-fold cross validation.
+Define all the parameters in the [config.yaml](src/config.yaml) file to perform a k-fold cross validation.
 The first section includes general parameters:
 
 * `seed`: Seed value used for reproducibility
@@ -66,7 +66,7 @@ python train_script.py
 
 ### 4.3. Train for submission
 
-Specify all the parameters in the ./src/config.yaml file following the same format used for training a cross-validation, then run 
+Specify all the parameters in the [config.yaml](src/config.yaml) file following the same format used for training a cross-validation, then run 
 ```
 cd ./src
 python submission_script.py
