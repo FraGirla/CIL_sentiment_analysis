@@ -1,50 +1,20 @@
 # Baselines
 
-BoW + LogisticRegression (solver:sage) &rarr; mean: 0.80234   std: 0.00208
-* mean acc:  0.80234
-* std acc:  0.00208
+BoW + LogisticRegression (solver:sage) &rarr; mean: 0.80234 | std: 0.00208
 
--------------------------------------------------------------
+Bow + LinearSVC &rarr; mean: 0.73223 | std: 0.00330
 
-Bow + LinearSVC
-* mean acc:  0.73223
-* std acc:  0.00330
+Bow + XGBClassifier &rarr; mean: 0.75714 | std: 0.00238
 
--------------------------------------------------------------
+Bow + GradientBoostingClassifier &rarr; mean: 0.69983 | std: 0.00147
 
-Bow + XGBClassifier
-* mean acc:  0.75714
-* std acc:  0.00238
+TFIDF + LogisticRegression (solver:sage) &rarr; mean: 0.80181 | std: 0.00207
 
--------------------------------------------------------------
+TFIDF + LinearSVC &rarr; mean: 0.71319 | std: 0.00381
 
-Bow + GradientBoostingClassifier
-* mean acc:  0.69983
-* std acc:  0.00147
+TFIDF + XGBClassifier &rarr; mean: 0.76275 | std: 0.00193
 
--------------------------------------------------------------
-
-TFIDF + LogisticRegression (solver:sage)
-* mean acc:  0.80181
-* std acc:  0.00207
-
--------------------------------------------------------------
-
-TFIDF + LinearSVC
-* mean acc:  0.71319
-* std acc:  0.00381
-
--------------------------------------------------------------
-
-TFIDF + XGBClassifier
-* mean acc:  0.76275
-* std acc:  0.00193
-
--------------------------------------------------------------
-
-TFIDF + GradientBoostingClassifier
-* mean acc:  0.70025
-* std acc:  0.00231
+TFIDF + GradientBoostingClassifier &rarr; mean: 0.70025 | std: 0.00231
 
 -------------------------------------------------------------
 # Transformers models:
