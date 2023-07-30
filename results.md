@@ -21,43 +21,34 @@ TFIDF + GradientBoostingClassifier &rarr; mean: 0.70025 | std: 0.00231
 
 First attempts on cardiffnlp/twitter-roberta-base-sentiment
 
-training 0 layers: 0.7809
+training 0 layers &rarr; 0.7809
 
-training 1 layers: 0.8261
+training 1 layers &rarr; 0.8261
 
-training 2 layers no embedding: 0.8319
+training 2 layers no embedding &rarr; 0.8319
 
-training 6 layers no embedding ~0.84
+training 6 layers no embedding &rarr; ~0.84
 
-training 12 layers no embedding ~0.852
+training 12 layers no embedding &rarr; ~0.852
 
-training 6 layers no embedding clean_tweet 0.8929
+training 6 layers no embedding clean_tweet preprocessing &rarr; 0.8929
 
-training 12 layers no embedding no preprocessing ~0.83
+training 12 layers no embedding no preprocessing &rarr; ~0.83
 
-training 12 layers with embedding no preprocessing 0.8266
+training 12 layers with embedding no preprocessing &rarr; 0.8266
 
 -------------------------------------------------------------
 
 ## Hyperparameters:
-* BATCH_SIZE 32
-* learning_rate 5e-5
-* dropout classification 0.1
+* batch_size: 32
+* learning_rate: 5e-5
+* classification_dropout: 0.1
 * num_epoch 1
-* MAX_LEN 128/512 (BERT 128 / roBERTa 512)
+* max_len 128/512 (BERTweet 128 / cardiffnlp/twitter-roberta-base-sentiment 512)
 
-roBERTa 12 layers no embedding clean_tweet
-mean acc:  0.8923125862793351
-std acc:  0.0023438754395944676
-ON KAGGLE PUBLIC: 0.893
+roBERTa 12 layers no embedding clean_tweet preprocessing &rarr; mean: 0.89231 | std: 0.00234 | Kaggle LB: 0.893
 
-roBERTa 12 layers with embedding clean_tweet
-mean acc:  0.89891753196 based on 4 fold (1 fold gived 0.5)
-std acc:  0.0025041120717059
-
-roBERTa 12 layers with embedding clean_tweet and custom nn
-mean acc:  0.8922649700898304
-std acc:  0.002273580409090531
+roBERTa 12 layers with embedding clean_tweet preprocessing and custom nn &rarr; mean: 0.89226 | std: 0.00227
 
 BERT 12 layers no embedding clean_tweet 
 mean acc: 0.89558 
