@@ -3,11 +3,9 @@ from datasets import DatasetDict
 from datasets import Dataset
 import numpy as np
 import pandas as pd
-import numpy as np
 from sklearn.model_selection import StratifiedKFold
 import os
 import torch.nn as nn
-
 from transformers import DataCollatorWithPadding, get_scheduler, AutoTokenizer
 import transformers
 from torch.utils.data import DataLoader
@@ -22,10 +20,24 @@ torch.cuda.empty_cache()
 
 
 def tokenize_function(examples,tokenizer):
-    return tokenizer(examples["text"], max_length=config.model.max_len, padding='longest',)
+    """
+    Tokenizes samples using the provided tokenizer.
+    """
+    return tokenizer(examples["text"], max_length=config.model.max_len, padding='max_length', truncation=True)
 
-def train_loop(model, optimizer, lr_scheduler, train_dataloader, test_dataloader):
+def train_loop(model, optimizer, lr_scheduler, train_dataloader):
+    """
+    Training loop for a single model
 
+    Args:
+        model (torch.nn.Module): The model to train.
+        optimizer (torch.optim.Optimizer): The optimizer to use during training.
+        lr_scheduler: The learning rate scheduler.
+        train_dataloader: DataLoader for training data.
+
+    Returns:
+        None
+    """
     if config.model.awp:
         awp = AWP(model=model,
         optimizer=optimizer,
@@ -55,22 +67,27 @@ def train_loop(model, optimizer, lr_scheduler, train_dataloader, test_dataloader
     torch.cuda.empty_cache()
 
 def training(dataset):
+    """
+    Tokenize dataset and train the model
+
+    Args:
+        dataset: The entire dataset: train + test 
+
+    Returns:
+        tuple: A tuple containing the trained model and the test dataloader (for generating predictions with ensemble technique).
+    """
     tokenizer = AutoTokenizer.from_pretrained(config.model.name)
-
     tokenized_datasets = dataset.map(lambda examples: tokenize_function(examples,tokenizer), batched=True)
-
     tokenized_datasets['train'].set_format('torch', columns=["input_ids", "attention_mask", "label"] )
     tokenized_datasets['test'].set_format('torch', columns=["input_ids", "attention_mask"] )
 
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
     train_dataloader = DataLoader(tokenized_datasets['train'], shuffle = True, batch_size = config.model.batch_size, collate_fn = data_collator)
-
     test_dataloader = DataLoader(tokenized_datasets['test'], batch_size = config.general.test_batch, collate_fn = data_collator)
+    
     model = CustomModel(checkpoint=config.model.name, num_labels=1, classifier_dropout=config.model.classification_dropout).to(device)
-
     config_layers(model,config.model.require_grad,config.model.lora,config.model.lora_params)
-
     model.to(device)
 
     optimizer = optim.AdamW(model.parameters(), lr=config.model.lr)
@@ -82,7 +99,7 @@ def training(dataset):
         num_training_steps = config.model.num_epochs*len(train_dataloader),   
     )
 
-    train_loop(model, optimizer, lr_scheduler, train_dataloader, test_dataloader)
+    train_loop(model, optimizer, lr_scheduler, train_dataloader)
 
     del tokenized_datasets
     del train_dataloader
@@ -92,6 +109,17 @@ def training(dataset):
     return model, test_dataloader
 
 def generate_predictions_ensemble(models, test_dataloaders, weights):
+    """
+    Generate predictions using ensemble technique.
+
+    Args:
+        models (list): List of trained models.
+        test_dataloaders (list): List of test dataloaders.
+        weights (list): List of weights for the models (for weighted ensemble).
+
+    Returns:
+        list: List of final predictions.
+    """
     for model in models:
         model.eval()
     THRESHOLD = 0.5
@@ -99,17 +127,19 @@ def generate_predictions_ensemble(models, test_dataloaders, weights):
     with tqdm(test_dataloaders[0]) as test_bar:
         test_bar.set_description(f"Evaluating Ensemble")
         iterators = [iter(data_loader) for data_loader in test_dataloaders]
-        for batch_number in range(len(test_dataloaders[0])):
+        for _ in range(len(test_dataloaders[0])): #every batch in dataloader
             batches = []
             for i in range(len(test_dataloaders)):
                 batch = next(iterators[i])
                 batches.append({ k: v.to(device) for k, v in batch.items() })
             final_pred = torch.zeros(batches[0]["input_ids"].shape[0])
             
-            for i, model in enumerate(models):
+            for i, model in enumerate(models): #inference of every model
                 with torch.no_grad():
                     outputs = model(**batches[i])
+
                 predictions = outputs.logits.cpu()
+
                 if config.ensemble.strategy == "avg":
                     predictions = torch.clamp(2*predictions-1,-1,1)
                     final_pred += predictions.squeeze()
@@ -129,6 +159,16 @@ def generate_predictions_ensemble(models, test_dataloaders, weights):
     return final_predictions
 
 def generate_predictions(model, test_dataloader):
+    """
+    Generate predictions using a single model.
+
+    Args:
+        model (torch.nn.Module): The trained model.
+        test_dataloader (torch.utils.data.DataLoader): DataLoader for test data.
+
+    Returns:
+        list: List of final predictions.
+    """
     model.eval()
     threshold = 0.5
     final_predictions = []
@@ -145,12 +185,13 @@ def generate_predictions(model, test_dataloader):
             final_predictions.extend(predictions.cpu().numpy().tolist())
             test_bar.update(1)
         test_bar.close()
+
     return final_predictions
 
 
 
 if __name__ == '__main__':
-    
+    #Load the configuration from 'config.yaml'
     config = get_config('config.yaml')
     config = dictionary_to_namespace(config)
     set_seed(config.general.seed)
@@ -164,30 +205,23 @@ if __name__ == '__main__':
     #create pandas dataframe for training dataset
     train_df = pd.read_csv(config.general.train_path)
     test_df = pd.read_csv(config.general.test_path)
-    #drop nan
-    train_df.dropna(inplace=True)
-
-    #drop every column except text and label
-    train_df = train_df[[config.general.column_text_name,config.general.column_label_name]]
-    test_df = test_df[[config.general.column_text_name]]
-    #rename columns
-    train_df.columns = ['text','label']
-    test_df.columns = ['text']
 
     dataset = DatasetDict({'train': Dataset.from_pandas(train_df), 'test': Dataset.from_pandas(test_df)})
-    if config.general.use_subsampling:
 
+    #shuffle training data to ensure that the training batches are more representative of the dataset
+    if config.general.use_subsampling:
         dataset["train"] = dataset["train"].shuffle(seed=config.general.seed).select(range(config.subsampling.train))
         dataset["test"] = dataset["test"].select(range(config.subsampling.test))
     else:
         dataset["train"] = dataset["train"].shuffle(seed=config.general.seed)
-
     dataset['train'] = dataset['train'].map(lambda x: {"label": [float(x[config.general.column_label_name])]})
+
     if config.general.ensemble:
         models = []
         weights = config.inference.weights
         test_dataloaders = []
         for model_cfg in config.ensemble.models:
+            #configs for every model
             model_cfg = dictionary_to_namespace(model_cfg)
             print("Training model: ", model_cfg.name)
 
@@ -214,6 +248,7 @@ if __name__ == '__main__':
         model, test_dataloader = training(dataset)
         predictions = generate_predictions(model, test_dataloader)
     
+    #save predictions on a csv file
     predictions_pd = pd.DataFrame({"Prediction": np.array(predictions).ravel()})
     predictions_pd['Prediction'] = predictions_pd['Prediction'].replace(0, -1)
     predictions_pd.index = np.arange(1, len(predictions_pd) + 1)
