@@ -1,3 +1,7 @@
+"""
+Source: https://github.com/VinAIResearch/BERTweet
+"""
+
 from emoji import demojize
 from nltk.tokenize import TweetTokenizer
 
