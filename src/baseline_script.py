@@ -13,13 +13,162 @@ from sklearn.naive_bayes import GaussianNB
 from xgboost import XGBClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.preprocessing import StandardScaler
-
+import torch 
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import  DataLoader
+from torch.nn.utils.rnn import pad_sequence
+from torchtext.vocab import GloVe
+import tqdm
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #print(torch.cuda.get_device_name(device))
 torch.cuda.empty_cache()
 ts = int(time.time())
+
+class LSTMClassifier(nn.Module):
+    def __init__(self, input_size, hidden_size):
+        super(LSTMClassifier, self).__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers=1, batch_first=True)
+        self.fc = nn.Linear(hidden_size, 1)
+
+    def forward(self, embeddings=None, label=None):
+        embeddings = embeddings.reshape(embeddings.shape[0], embeddings.shape[1] // self.input_size, self.input_size)
+        lstm_out, _ = self.lstm(embeddings)
+        logits = self.fc(lstm_out[:, -1, :])  ## Taking the last output of LSTM as the prediction
+        logits = torch.sigmoid(logits)
+        loss = None
+        if label is not None:
+            loss = nn.functional.binary_cross_entropy(logits, label)
+            return logits, loss
+        else:
+            return logits
+
+class CustomDataset(torch.utils.data.Dataset):
+    def __init__(self, data, label):
+        self.data = data
+        self.label = label
+        self.word2vec = GloVe(name='twitter.27B', dim=100)
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+        input_ids = self.word2vec.get_vecs_by_tokens(self.data[index].split(), lower_case_backup=True).view(-1)
+        return input_ids, self.label[index]
+    
+def collate_fn(batch):
+    # Sort sentences by length in descending order
+    inputs, targets = zip(*batch)
+    # Pad sequences in the batch
+    padded_batch = pad_sequence(inputs, batch_first=True, padding_value=0)
+    return padded_batch, targets
+
+def train_func_lstm(model: nn.Module, input_size:int, hidden_size: int, train_embeddings: pd.DataFrame, batch_size=32, epochs=3, lr=0.001, save_path=None, load_path=None, done_epochs=0):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # Use GPU if available
+    print(torch.cuda.get_device_name(device))
+
+    X = train_embeddings['embeddings']
+    y = train_embeddings['label']
+
+    num_folds = 5
+
+    skf = StratifiedKFold(n_splits=num_folds, shuffle=True, random_state=42)
+    accuracy_scores = []
+    
+    for fold, (train_index, val_index) in enumerate(skf.split(X, y)):
+        model = LSTMClassifier(input_size, hidden_size)
+        model.to(device)
+        optimizer = optim.Adam(model.parameters(), lr=lr)
+
+        if load_path is not None:
+            #load epoch, model, optimizer, loss
+            checkpoint = torch.load(f"{load_path}/lstm_{hidden_size}_{fold}_{done_epochs}_{batch_size}_{lr}.pt")
+            model.load_state_dict(checkpoint['model_state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            done_epochs = checkpoint['epoch']
+            fold = checkpoint['fold']
+            loss = checkpoint['loss']
+        else:
+            done_epochs = 0
+        # Initialize the model, criterion, and optimizer
+        model.to(device)
+        print(f"Fold {fold + 1}")
+        # Split data into training and validation sets for this fold
+        train_data = X.iloc[train_index].to_list()
+        train_label = y.iloc[train_index].to_list()
+        val_data = X.iloc[val_index].to_list()
+        val_label = y.iloc[val_index].to_list()
+
+    
+        # Create training and validation datasets
+        train_dataset = CustomDataset(train_data, torch.tensor(train_label).float())
+        val_dataset = CustomDataset(val_data, torch.tensor(val_label).float())
+    
+        # Create DataLoader for training and validation
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, collate_fn=collate_fn , shuffle=True)
+        val_loader = DataLoader(val_dataset, batch_size=batch_size, collate_fn =collate_fn, shuffle=True)
+
+        epoch_accuracy_scores = []
+        assert done_epochs < epochs
+        for epoch in range(done_epochs, epochs):
+            # Training loop
+            model.train()
+            for batch in tqdm.tqdm(train_loader, ncols=100, desc=f"training epoch {epoch + 1}", total=len(train_loader)):
+                optimizer.zero_grad()
+                inputs, targets = batch
+                inputs = inputs.to(device)
+                targets = torch.tensor(targets).float().unsqueeze(1)
+                targets = targets.to(device)
+                outputs, loss = model(inputs, targets)
+                del inputs
+
+                loss.backward()
+                optimizer.step()
+    
+            # Validation loop
+            model.eval()
+            val_loss = 0.0
+            correct = 0
+            total = 0
+            with torch.no_grad():
+                for batch in tqdm.tqdm(val_loader, ncols=100, desc=f"validation epoch {epoch + 1}", total=len(val_loader)):
+                    inputs, targets = batch
+                    inputs = inputs.to(device)
+                    targets = torch.tensor(targets).float().unsqueeze(1)
+                    targets = targets.to(device)
+                    outputs, loss = model(inputs, targets)
+                    del inputs
+
+                    val_loss += loss.item()
+                    predicted = (outputs >= 0.5).int()
+                    total += targets.size(0)
+                    correct += (predicted == targets).sum().item()
+    
+            val_loss /= len(val_loader)
+            accuracy = 100 * correct / total
+            epoch_accuracy_scores.append(accuracy)
+    
+            # Print validation metrics for this fold
+            print(f"Fold {fold + 1}, Epoch {epoch + 1}: Val Loss: {val_loss:.4f}, Accuracy: {accuracy:.2f}%")
+
+        if save_path is not None:
+            #save epoch, model, optimizer, loss, fold
+            torch.save({
+                'epoch': epochs,
+                'fold': fold,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': loss
+                }, f"{save_path}/lstm_{hidden_size}_{fold}_{epochs}_{batch_size}_{lr}.pt")
+        accuracy_scores.append(epoch_accuracy_scores[-1])
+
+    #print average accuracy and standard deviation
+    print(f"mean accuracy: {np.mean(accuracy_scores)}")
+    print(f"standard deviation: {np.std(accuracy_scores)}")
 
 def training(X_train, y_train, X_test, y_test, model_name):
     """
@@ -141,3 +290,16 @@ if __name__ == '__main__':
         for model in ['LogisticRegression', 'SVC', 'XGBClassifier','GradientBoostingClassifier']:
             print(f"Embedding: {embedding}, Model: {model}")
             cross_val(train_df, embedding, model)
+
+    input_size = 100
+    hidden_size = 100
+    lstm = LSTMClassifier(input_size, hidden_size)
+
+    epochs = 10
+    batch_size = 32
+    lr = 0.0001
+    tfl = lambda model, train_embeddings: train_func_lstm(model, input_size, hidden_size, train_embeddings, \
+                                                          epochs=epochs, batch_size=batch_size, lr=lr, save_path=f"lstm",  \
+                                                            load_path=None)
+    train_df.rename(columns={'text': 'embeddings'}, inplace=True)
+    tfl(lstm, train_df)
