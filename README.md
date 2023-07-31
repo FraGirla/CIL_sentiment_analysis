@@ -26,6 +26,9 @@ python preprocess_train.py
 python preprocess_train.py
 ```
 
+If you want to compute the old preprocessing used for the baselines you can run the Jupyper notebook in ```/old_scripts/preprocessing_train_old.ipynb``` and ```/old_scripts/preprocessing_test_old.ipynb```.
+The column that we used for the baselines was ```partial_cleaned_tweet```.
+
 ## 4. Train models
 
 ### 4.1. Baselines models
@@ -95,7 +98,7 @@ The table below shows the most significant performances obtained:
 | BERTweet-base with AWP             | 91.43            | 0.247        |
 | BERTweet-large with AWP            | 91.43            | 0.247        |
 | BERTweet-large with LoRA           | 91.43            | 0.179        |
-| Enhanced BERTweet ensemble         | $\mathbf{92.04}$ | 0.273        |
+| Enhanced BERTweet ensemble         | **92.04**        | 0.273        |
 
 The strongest performance (**Enhanced BERTweet ensemble**) was obtained with an ensemble of three models:
 * BERTweet-base
