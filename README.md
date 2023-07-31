@@ -105,6 +105,6 @@ The strongest performance (**Enhanced BERTweet ensemble**) was obtained with an 
 * BERTweet-large
 * BERTweet-large using LoRA (Low-Rank Adaptation)
 
-The ensemble has been cross-validated on a NVIDIA A100 80GB PCIe on Euler Cluster using [train.sh](src/train.sh)
+The ensemble has been cross-validated on a NVIDIA A100 80GB PCIe on Euler Cluster using [train.sh](src/train.sh) and [config.yaml](src/config.yaml)
 
-The final submission has been generated on a NVIDIA A100 80GB PCIe on Euler Cluster using [submission.sh](src/submission.sh)
+The final submission has been generated on a NVIDIA A100 80GB PCIe on Euler Cluster using [submission.sh](src/submission.sh) and [config.yaml](src/config.yaml)
