@@ -89,11 +89,13 @@ The table below shows the most significant performances obtained:
 | TFIDF + XGBClassifier              | 76.28            | 0.193        |
 | BoW + GradientBoostingClassifier   | 69.98            | 0.149        |
 | TFIDF + GradientBoostingClassifier | 70.03            | 0.232        |
-| GloVe + LSTM                       | 86.57            | 0.07         |
+| GloVe + LSTM                       | 86.64            | 0.043        |
 | distilBERT                         | 89.61            | 0.239        |
 | roBERTaTweet                       | 90.78            | 0.245        |
-| BERTweet-base                      | 91.43            | 0.247        |
-| Enhanced BERTweet ensemble         | $\mathbf{92.02}$ | 0.249        |
+| BERTweet-base with AWP             | 91.43            | 0.247        |
+| BERTweet-large with AWP            | 91.43            | 0.247        |
+| BERTweet-large with LoRA           | 91.43            | 0.179        |
+| Enhanced BERTweet ensemble         | $\mathbf{92.02}$ | 0.266        |
 
 The strongest performance (**Enhanced BERTweet ensemble**) was obtained with an ensemble of three models:
 * BERTweet-base
