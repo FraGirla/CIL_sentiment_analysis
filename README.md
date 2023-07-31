@@ -101,9 +101,9 @@ The table below shows the most significant performances obtained:
 | Enhanced BERTweet ensemble         | **92.04**    | 0.273        |
 
 The strongest performance (**Enhanced BERTweet ensemble**) was obtained with an ensemble of three models:
-* BERTweet-base with AWP
-* BERTweet-large with AWP
-* BERTweet-large with LoRA (Low-Rank Adaptation)
+* BERTweet-base with Adversarial Weight Perturbation (AWP)
+* BERTweet-large with Adversarial Weight Perturbation (AWP)
+* BERTweet-large with Low-Rank Adaptation (LoRA)
 
 The ensemble has been cross-validated on a NVIDIA A100 80GB PCIe on Euler Cluster using [train.sh](src/train.sh) and [config.yaml](src/config.yaml)
 
