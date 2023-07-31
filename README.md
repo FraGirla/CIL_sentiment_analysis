@@ -95,7 +95,7 @@ The table below shows the most significant performances obtained:
 | BERTweet-base with AWP             | 91.43            | 0.247        |
 | BERTweet-large with AWP            | 91.43            | 0.247        |
 | BERTweet-large with LoRA           | 91.43            | 0.179        |
-| Enhanced BERTweet ensemble         | $\mathbf{92.02}$ | 0.273        |
+| Enhanced BERTweet ensemble         | $\mathbf{92.04}$ | 0.273        |
 
 The strongest performance (**Enhanced BERTweet ensemble**) was obtained with an ensemble of three models:
 * BERTweet-base
