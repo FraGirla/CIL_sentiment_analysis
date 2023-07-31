@@ -295,7 +295,7 @@ if __name__ == '__main__':
     hidden_size = 100
     lstm = LSTMClassifier(input_size, hidden_size)
 
-    epochs = 10
+    epochs = 12
     batch_size = 32
     lr = 0.0001
     tfl = lambda model, train_embeddings: train_func_lstm(model, input_size, hidden_size, train_embeddings, \
