@@ -23,7 +23,7 @@ Run the following commands to preprocess training and test data:
 ```
 cd ./preprocessed
 python preprocess_train.py
-python preprocess_train.py
+python preprocess_test.py
 ```
 
 If you want to compute the old preprocessing used for the baselines you can run the Jupyper notebook in ```/old_scripts/preprocessing_train_old.ipynb``` and ```/old_scripts/preprocessing_test_old.ipynb```.
